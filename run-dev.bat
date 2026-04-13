@@ -1,4 +1,4 @@
 @echo off
 pushd "%~dp0"
-node index.js
+npm run dev
 pause
