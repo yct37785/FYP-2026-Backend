@@ -1,5 +1,5 @@
 import express from 'express';
-import noteRoutes from '@routes/noteRoutes';
+import authRoutes from '@routes/authRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { env } from '@config/env';
@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend is running' });
 });
 
-app.use('/api', noteRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

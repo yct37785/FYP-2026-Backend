@@ -9,8 +9,10 @@
       "@middlewares/*": ["./src/middlewares/*"],
       "@routes/*": ["./src/routes/*"],
       "@services/*": ["./src/services/*"],
-      "@mytypes/*": ["./src/types/*"]
+      "@mytypes/*": ["./src/types/*"],
+      "@utils/*": ["./src/utils/*"]
     },
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
