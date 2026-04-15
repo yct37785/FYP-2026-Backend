@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { AuthService } from '@services/authService';
+import { ERR_MSGS } from '@const/errorMessages';
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -8,7 +9,7 @@ export class AuthController {
 
       if (!name || !email || !password) {
         return res.status(400).json({
-          error: 'name, email and password are required',
+          error: ERR_MSGS.AUTH.NAME_EMAIL_PASSWORD_REQUIRED,
         });
       }
 
@@ -26,7 +27,7 @@ export class AuthController {
 
       if (!email || !password) {
         return res.status(400).json({
-          error: 'email and password are required',
+          error: ERR_MSGS.AUTH.EMAIL_PASSWORD_REQUIRED,
         });
       }
 
@@ -42,7 +43,7 @@ export class AuthController {
     try {
       if (!req.user) {
         return res.status(401).json({
-          error: 'Unauthorized',
+          error: ERR_MSGS.AUTH.UNAUTHORIZED,
         });
       }
 

@@ -5,6 +5,7 @@
     "moduleResolution": "NodeNext",
     "paths": {
       "@config/*": ["./src/config/*"],
+      "@const/*": ["./src/constants/*"],
       "@controllers/*": ["./src/controllers/*"],
       "@middlewares/*": ["./src/middlewares/*"],
       "@routes/*": ["./src/routes/*"],

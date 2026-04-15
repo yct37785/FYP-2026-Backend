@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { verifyToken } from '@utils/jwt';
+import { ERR_MSGS } from '@const/errorMessages';
 
 export const authMiddleware = (
   req: Request,
@@ -11,7 +12,7 @@ export const authMiddleware = (
 
     if (!authHeader) {
       return res.status(401).json({
-        error: 'Authorization header is required',
+        error: ERR_MSGS.AUTH.AUTH_HEADER_REQUIRED,
       });
     }
 
@@ -19,18 +20,17 @@ export const authMiddleware = (
 
     if (scheme !== 'Bearer' || !token) {
       return res.status(401).json({
-        error: 'Invalid authorization format. Use Bearer <token>',
+        error: ERR_MSGS.AUTH.INVALID_AUTH_FORMAT,
       });
     }
 
     const decoded = verifyToken(token);
-
     req.user = decoded;
 
     next();
   } catch (error) {
     return res.status(401).json({
-      error: 'Invalid or expired token',
+      error: ERR_MSGS.AUTH.INVALID_OR_EXPIRED_TOKEN,
     });
   }
 };

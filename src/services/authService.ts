@@ -3,6 +3,7 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { db } from '@config/db';
 import type { LoginInput, RegisterInput, UserRole } from '@mytypes/auth';
 import { signToken } from '@utils/jwt';
+import { ERR_MSGS } from '@const/errorMessages';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -23,7 +24,7 @@ export class AuthService {
     );
 
     if (existingUsers.length > 0) {
-      throw new Error('Email is already registered');
+      throw new Error(ERR_MSGS.AUTH.EMAIL_ALREADY_REGISTERED);
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -70,19 +71,23 @@ export class AuthService {
     );
 
     if (rows.length === 0) {
-      throw new Error('Invalid email or password');
+      throw new Error(ERR_MSGS.AUTH.INVALID_EMAIL_OR_PASSWORD);
     }
 
     const user = rows[0];
 
-    if (user.status !== 'active') {
-      throw new Error(`Account is ${user.status}`);
+    if (user.status === 'suspended') {
+      throw new Error(ERR_MSGS.AUTH.ACCOUNT_SUSPENDED);
+    }
+
+    if (user.status === 'deactivated') {
+      throw new Error(ERR_MSGS.AUTH.ACCOUNT_DEACTIVATED);
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
-      throw new Error('Invalid email or password');
+      throw new Error(ERR_MSGS.AUTH.INVALID_EMAIL_OR_PASSWORD);
     }
 
     const token = signToken({
@@ -114,7 +119,7 @@ export class AuthService {
     );
 
     if (rows.length === 0) {
-      throw new Error('User not found');
+      throw new Error(ERR_MSGS.AUTH.USER_NOT_FOUND);
     }
 
     const user = rows[0];
