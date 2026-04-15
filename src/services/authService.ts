@@ -1,19 +1,15 @@
 import bcrypt from 'bcrypt';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { db } from '@config/db';
-import { LoginInput, RegisterInput } from '@mytypes/auth';
+import type { LoginInput, RegisterInput, UserRole } from '@mytypes/auth';
 import { signToken } from '@utils/jwt';
-
-interface RoleRow extends RowDataPacket {
-  id: number;
-  name: string;
-}
 
 interface UserRow extends RowDataPacket {
   id: number;
   name: string;
   email: string;
   password_hash: string;
+  role: UserRole;
   status: 'active' | 'suspended' | 'deactivated';
 }
 
@@ -33,32 +29,20 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const [userResult] = await db.execute<ResultSetHeader>(
-      'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-      [name, email, passwordHash]
+      `
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES (?, ?, ?, ?)
+      `,
+      [name, email, passwordHash, 'user']
     );
 
     const userId = userResult.insertId;
-
-    const [roleRows] = await db.execute<RoleRow[]>(
-      'SELECT id, name FROM roles WHERE name = ? LIMIT 1',
-      ['user']
-    );
-
-    if (roleRows.length === 0) {
-      throw new Error('Default role "user" not found');
-    }
-
-    const userRoleId = roleRows[0].id;
-
-    await db.execute(
-      'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)',
-      [userId, userRoleId]
-    );
+    const role: UserRole = 'user';
 
     const token = signToken({
       userId,
       email,
-      role: 'user',
+      role,
     });
 
     return {
@@ -67,7 +51,7 @@ export class AuthService {
         id: userId,
         name,
         email,
-        role: 'user',
+        role,
       },
     };
   }
@@ -77,9 +61,9 @@ export class AuthService {
 
     const [rows] = await db.execute<UserRow[]>(
       `
-      SELECT u.id, u.name, u.email, u.password_hash, u.status
-      FROM users u
-      WHERE u.email = ?
+      SELECT id, name, email, password_hash, role, status
+      FROM users
+      WHERE email = ?
       LIMIT 1
       `,
       [email]
@@ -101,27 +85,10 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    const [roleRows] = await db.execute<RoleRow[]>(
-      `
-      SELECT r.id, r.name
-      FROM roles r
-      INNER JOIN user_roles ur ON ur.role_id = r.id
-      WHERE ur.user_id = ?
-      LIMIT 1
-      `,
-      [user.id]
-    );
-
-    if (roleRows.length === 0) {
-      throw new Error('User role not found');
-    }
-
-    const role = roleRows[0].name;
-
     const token = signToken({
       userId: user.id,
       email: user.email,
-      role,
+      role: user.role,
     });
 
     return {
@@ -130,27 +97,17 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        role,
+        role: user.role,
       },
     };
   }
 
   static async getCurrentUser(userId: number) {
-    const [rows] = await db.execute<
-      (UserRow & { role: string })[]
-    >(
+    const [rows] = await db.execute<UserRow[]>(
       `
-      SELECT 
-        u.id,
-        u.name,
-        u.email,
-        u.password_hash,
-        u.status,
-        r.name AS role
-      FROM users u
-      INNER JOIN user_roles ur ON ur.user_id = u.id
-      INNER JOIN roles r ON r.id = ur.role_id
-      WHERE u.id = ?
+      SELECT id, name, email, password_hash, role, status
+      FROM users
+      WHERE id = ?
       LIMIT 1
       `,
       [userId]

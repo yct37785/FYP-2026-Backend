@@ -1,3 +1,5 @@
+export type UserRole = 'user' | 'organizer' | 'admin';
+
 export interface RegisterInput {
   name: string;
   email: string;
@@ -12,5 +14,5 @@ export interface LoginInput {
 export interface JwtPayloadData {
   userId: number;
   email: string;
-  role: string;
+  role: UserRole;
 }
