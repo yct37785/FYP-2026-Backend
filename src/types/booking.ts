@@ -4,6 +4,7 @@ export interface BookingItem {
   eventId: number;
   eventTitle: string;
   eventPrice: number;
+  creditsSpent: number;
   eventStartsAt: Date;
   eventEndsAt: Date;
   eventVenue: string;

@@ -34,6 +34,7 @@ interface BookingRow extends RowDataPacket {
   event_id: number;
   event_title: string;
   event_price: number;
+  credits_spent: number;
   event_starts_at: Date;
   event_ends_at: Date;
   event_venue: string;
@@ -48,6 +49,7 @@ const mapBookingRow = (row: BookingRow): BookingItem => ({
   eventId: row.event_id,
   eventTitle: row.event_title,
   eventPrice: Number(row.event_price),
+  creditsSpent: Number(row.credits_spent),
   eventStartsAt: row.event_starts_at,
   eventEndsAt: row.event_ends_at,
   eventVenue: row.event_venue,
@@ -158,10 +160,10 @@ export class BookingService {
 
       const [result] = await connection.execute<ResultSetHeader>(
         `
-        INSERT INTO booking (user_id, event_id)
-        VALUES (?, ?)
+        INSERT INTO booking (user_id, event_id, credits_spent)
+        VALUES (?, ?, ?)
         `,
-        [userId, eventId]
+        [userId, eventId, eventPrice]
       );
 
       await connection.commit();
@@ -174,6 +176,7 @@ export class BookingService {
           b.event_id,
           e.title AS event_title,
           e.price AS event_price,
+          b.credits_spent,
           e.starts_at AS event_starts_at,
           e.ends_at AS event_ends_at,
           e.venue AS event_venue,
