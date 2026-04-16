@@ -29,4 +29,76 @@ router.post('/events/:eventId', authMiddleware, async (req, res, next) => {
   }
 });
 
+router.get('/mine', authMiddleware, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: ERR_MSGS.AUTH.UNAUTHORIZED,
+      });
+    }
+
+    const items = await BookingService.getMyBookings(req.user.userId);
+
+    return res.status(200).json({
+      count: items.length,
+      items,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/mine/:id', authMiddleware, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: ERR_MSGS.AUTH.UNAUTHORIZED,
+      });
+    }
+
+    const bookingId = Number(req.params.id);
+
+    if (Number.isNaN(bookingId)) {
+      return res.status(400).json({
+        error: ERR_MSGS.EVENT.INVALID_INPUT,
+      });
+    }
+
+    const item = await BookingService.getMyBookingById(
+      req.user.userId,
+      bookingId
+    );
+
+    return res.status(200).json(item);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/mine/:id', authMiddleware, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: ERR_MSGS.AUTH.UNAUTHORIZED,
+      });
+    }
+
+    const bookingId = Number(req.params.id);
+
+    if (Number.isNaN(bookingId)) {
+      return res.status(400).json({
+        error: ERR_MSGS.EVENT.INVALID_INPUT,
+      });
+    }
+
+    await BookingService.deleteMyBooking(req.user.userId, bookingId);
+
+    return res.status(200).json({
+      message: 'Booking deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

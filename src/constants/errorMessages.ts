@@ -30,6 +30,7 @@ export const ERR_MSGS = {
     EVENT_SUSPENDED: 'Event is suspended',
     ALREADY_BOOKED: 'You have already booked this event',
     INSUFFICIENT_CREDITS: 'Insufficient credits',
+    BOOKING_NOT_FOUND: 'Booking not found',
   },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',

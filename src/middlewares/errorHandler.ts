@@ -45,6 +45,7 @@ export const errorHandler = (
       ERR_MSGS.ME.CATEGORY_PREFERENCE_NOT_FOUND,
       ERR_MSGS.EVENT.CATEGORY_NOT_FOUND,
       ERR_MSGS.EVENT.EVENT_NOT_FOUND,
+      ERR_MSGS.BOOKING.BOOKING_NOT_FOUND,
     ]);
 
     if (notFoundErrors.has(err.message)) {

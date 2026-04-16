@@ -199,4 +199,132 @@ export class BookingService {
       connection.release();
     }
   }
+
+  static async getMyBookings(userId: number): Promise<BookingItem[]> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<BookingRow[]>(
+      `
+      SELECT
+        b.id,
+        b.user_id,
+        b.event_id,
+        e.title AS event_title,
+        e.price AS event_price,
+        b.credits_spent,
+        e.starts_at AS event_starts_at,
+        e.ends_at AS event_ends_at,
+        e.venue AS event_venue,
+        e.city AS event_city,
+        b.created_at,
+        b.updated_at
+      FROM booking b
+      INNER JOIN event e ON e.id = b.event_id
+      WHERE b.user_id = ?
+      ORDER BY e.starts_at ASC, b.id ASC
+      `,
+      [userId]
+    );
+
+    return rows.map(mapBookingRow);
+  }
+
+  static async getMyBookingById(userId: number, bookingId: number): Promise<BookingItem> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<BookingRow[]>(
+      `
+      SELECT
+        b.id,
+        b.user_id,
+        b.event_id,
+        e.title AS event_title,
+        e.price AS event_price,
+        b.credits_spent,
+        e.starts_at AS event_starts_at,
+        e.ends_at AS event_ends_at,
+        e.venue AS event_venue,
+        e.city AS event_city,
+        b.created_at,
+        b.updated_at
+      FROM booking b
+      INNER JOIN event e ON e.id = b.event_id
+      WHERE b.id = ? AND b.user_id = ?
+      LIMIT 1
+      `,
+      [bookingId, userId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(ERR_MSGS.BOOKING.BOOKING_NOT_FOUND);
+    }
+
+    return mapBookingRow(rows[0]);
+  }
+
+  static async deleteMyBooking(userId: number, bookingId: number): Promise<void> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<BookingRow[]>(
+      `
+      SELECT
+        b.id,
+        b.user_id,
+        b.event_id,
+        e.title AS event_title,
+        e.price AS event_price,
+        b.credits_spent,
+        e.starts_at AS event_starts_at,
+        e.ends_at AS event_ends_at,
+        e.venue AS event_venue,
+        e.city AS event_city,
+        b.created_at,
+        b.updated_at
+      FROM booking b
+      INNER JOIN event e ON e.id = b.event_id
+      WHERE b.id = ? AND b.user_id = ?
+      LIMIT 1
+      `,
+      [bookingId, userId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(ERR_MSGS.BOOKING.BOOKING_NOT_FOUND);
+    }
+
+    const booking = rows[0];
+    const creditsSpent = Number(booking.credits_spent);
+
+    const connection = await pool.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      if (creditsSpent > 0) {
+        await connection.execute(
+          `
+          UPDATE users
+          SET credits = credits + ?
+          WHERE id = ?
+          `,
+          [creditsSpent, userId]
+        );
+      }
+
+      await connection.execute(
+        `
+        DELETE FROM booking
+        WHERE id = ?
+        `,
+        [bookingId]
+      );
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
 }
