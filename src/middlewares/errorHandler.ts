@@ -22,6 +22,8 @@ export const errorHandler = (
       ERR_MSGS.BOOKING.INSUFFICIENT_CREDITS,
       ERR_MSGS.WAITLIST.ALREADY_WAITLISTED,
       ERR_MSGS.WAITLIST.EVENT_HAS_SPACE,
+      ERR_MSGS.FAVORITE.ALREADY_FAVORITED,
+      ERR_MSGS.FAVORITE.EVENT_SUSPENDED,
     ]);
 
     if (badRequestErrors.has(err.message)) {
@@ -49,6 +51,7 @@ export const errorHandler = (
       ERR_MSGS.EVENT.EVENT_NOT_FOUND,
       ERR_MSGS.BOOKING.BOOKING_NOT_FOUND,
       ERR_MSGS.WAITLIST.WAITLIST_NOT_FOUND,
+      ERR_MSGS.FAVORITE.FAVORITE_NOT_FOUND,
     ]);
 
     if (notFoundErrors.has(err.message)) {

@@ -37,6 +37,11 @@ export const ERR_MSGS = {
     WAITLIST_NOT_FOUND: 'Waitlist entry not found',
     EVENT_HAS_SPACE: 'Event still has available space',
   },
+  FAVORITE: {
+    ALREADY_FAVORITED: 'You have already favorited this event',
+    FAVORITE_NOT_FOUND: 'Favorite not found',
+    EVENT_SUSPENDED: 'Event is suspended',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',
