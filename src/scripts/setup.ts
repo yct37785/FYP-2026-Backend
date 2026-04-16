@@ -1,6 +1,7 @@
 import { Db } from '@config/db';
 import { env } from '@config/env';
 import { AuthService } from '@services/authService';
+import { categoryNames } from '@const/categories';
 
 async function runSetup() {
   const connection = await Db.createRootConnection();
@@ -80,14 +81,22 @@ async function runSetup() {
 
     await Db.resetPool();
 
+    // seed users
     await AuthService.register({
       name: 'John Tan',
       email: 'john@example.com',
       password: 'password123',
     });
 
+    // seed categories
+    for (const categoryName of categoryNames) {
+      await connection.execute(
+        `INSERT INTO category (name) VALUES (?)`,
+        [categoryName]
+      );
+    }
+
     console.log('Setup completed successfully.');
-    console.log('Seed user: john@example.com / password123');
   } catch (error) {
     try {
       await connection.end();

@@ -1,0 +1,16 @@
+export const categoryNames = [
+  'General',
+  'Music',
+  'Food & Drink',
+  'Business',
+  'Technology',
+  'Health & Wellness',
+  'Sports & Fitness',
+  'Arts & Culture',
+  'Education & Workshop',
+  'Community & Social',
+  'Networking',
+  'Family & Kids',
+  'Charity & Causes',
+  'Travel & Outdoor',
+];
