@@ -2,14 +2,8 @@ import bcrypt from 'bcrypt';
 import { ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
 import { env } from '@config/env';
-import {
-  seedCategories,
-  seedUsers,
-} from './seedData';
-import {
-  schemaResetStatements,
-  tableStatements,
-} from './tableStatements';
+import { seedCategories, seedUsers } from './seedUsers';
+import { schemaResetStatements, tableStatements } from './tableStatements';
 import jwt from 'jsonwebtoken';
 import type { UserRole } from '@mytypes/user';
 
