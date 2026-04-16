@@ -25,6 +25,12 @@ export const ERR_MSGS = {
     EVENT_NOT_FOUND: 'Event not found',
     EVENT_NOT_OWNER: 'You are not the owner of this event'
   },
+  BOOKING: {
+    EVENT_FULL: 'Event is full',
+    EVENT_SUSPENDED: 'Event is suspended',
+    ALREADY_BOOKED: 'You have already booked this event',
+    INSUFFICIENT_CREDITS: 'Insufficient credits',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',
