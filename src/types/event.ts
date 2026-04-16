@@ -1,3 +1,5 @@
+import { EventSource, EventStatus } from '@const/event';
+
 export interface EventItem {
   id: number;
   ownerId: number;
@@ -12,10 +14,10 @@ export interface EventItem {
   startsAt: Date;
   endsAt: Date;
   price: number;
-  source: 'INTERNAL' | 'EXTERNAL';
+  source: EventSource;
   sourceName: string | null;
   externalEventId: string | null;
-  status: 'DRAFT' | 'PUBLISHED' | 'SUSPENDED';
+  status: EventStatus;
   createdAt: Date;
   updatedAt: Date;
 }

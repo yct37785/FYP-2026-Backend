@@ -1,6 +1,7 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
 import type { CreateEventInput, EventItem } from '@mytypes/event';
+import { EventSource, EventStatus } from '@const/event';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 interface CategoryRow extends RowDataPacket {
@@ -22,10 +23,10 @@ interface EventRow extends RowDataPacket {
   starts_at: Date;
   ends_at: Date;
   price: number;
-  source: 'INTERNAL' | 'EXTERNAL';
+  source: EventSource;
   source_name: string | null;
   external_event_id: string | null;
-  status: 'DRAFT' | 'PUBLISHED' | 'SUSPENDED';
+  status: EventStatus;
   created_at: Date;
   updated_at: Date;
 }
