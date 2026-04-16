@@ -17,6 +17,17 @@ interface CreateEventInput {
   price: number;
 }
 
+interface GetEventsInput {
+  categoryId?: number;
+  city?: string;
+  venue?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  startsFrom?: Date;
+  startsTo?: Date;
+  keyword?: string;
+}
+
 interface CategoryRow extends RowDataPacket {
   id: number;
   name: string;
@@ -147,5 +158,106 @@ export class EventService {
     );
 
     return mapEventRow(rows[0]);
+  }
+
+  static async getEvents(filters: GetEventsInput): Promise<EventItem[]> {
+    const pool = Db.getPool();
+
+    const conditions: string[] = ['e.is_suspended = false'];
+    const values: Array<string | number | Date> = [];
+
+    if (filters.categoryId !== undefined) {
+      conditions.push('e.category_id = ?');
+      values.push(filters.categoryId);
+    }
+
+    if (filters.city) {
+      conditions.push('e.city LIKE ?');
+      values.push(`%${filters.city}%`);
+    }
+
+    if (filters.venue) {
+      conditions.push('e.venue LIKE ?');
+      values.push(`%${filters.venue}%`);
+    }
+
+    if (filters.minPrice !== undefined) {
+      conditions.push('e.price >= ?');
+      values.push(filters.minPrice);
+    }
+
+    if (filters.maxPrice !== undefined) {
+      conditions.push('e.price <= ?');
+      values.push(filters.maxPrice);
+    }
+
+    if (filters.startsFrom) {
+      conditions.push('e.starts_at >= ?');
+      values.push(filters.startsFrom);
+    }
+
+    if (filters.startsTo) {
+      conditions.push('e.starts_at <= ?');
+      values.push(filters.startsTo);
+    }
+
+    if (filters.keyword) {
+      conditions.push(`
+        (
+          e.title LIKE ?
+          OR e.description LIKE ?
+          OR e.venue LIKE ?
+          OR e.address LIKE ?
+          OR e.city LIKE ?
+          OR c.name LIKE ?
+        )
+      `);
+
+      const keywordValue = `%${filters.keyword}%`;
+      values.push(
+        keywordValue,
+        keywordValue,
+        keywordValue,
+        keywordValue,
+        keywordValue,
+        keywordValue
+      );
+    }
+
+    const whereClause = conditions.length > 0
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+
+    const [rows] = await pool.execute<EventRow[]>(
+      `
+      SELECT
+        e.id,
+        e.owner_id,
+        e.title,
+        e.description,
+        e.banner_url,
+        e.category_id,
+        c.name AS category_name,
+        e.venue,
+        e.address,
+        e.city,
+        e.starts_at,
+        e.ends_at,
+        e.price,
+        e.source,
+        e.source_name,
+        e.external_event_id,
+        e.is_suspended,
+        e.created_at,
+        e.updated_at
+      FROM event e
+      INNER JOIN category c ON c.id = e.category_id
+      ${whereClause}
+      ORDER BY e.starts_at ASC, e.id ASC
+      `,
+      values
+    );
+
+    return rows.map(mapEventRow);
   }
 }

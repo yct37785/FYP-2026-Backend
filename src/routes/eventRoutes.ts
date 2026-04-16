@@ -6,6 +6,60 @@ import { EventService } from '@services/eventService';
 
 const router = Router();
 
+router.get('/', async (req, res, next) => {
+  try {
+    const parsedCategoryId = req.query.category_id
+      ? Number(req.query.category_id)
+      : undefined;
+
+    const parsedMinPrice = req.query.min_price
+      ? Number(req.query.min_price)
+      : undefined;
+
+    const parsedMaxPrice = req.query.max_price
+      ? Number(req.query.max_price)
+      : undefined;
+
+    const parsedStartsFrom = req.query.starts_from
+      ? new Date(String(req.query.starts_from))
+      : undefined;
+
+    const parsedStartsTo = req.query.starts_to
+      ? new Date(String(req.query.starts_to))
+      : undefined;
+
+    if (
+      (req.query.category_id && Number.isNaN(parsedCategoryId)) ||
+      (req.query.min_price && Number.isNaN(parsedMinPrice)) ||
+      (req.query.max_price && Number.isNaN(parsedMaxPrice)) ||
+      (req.query.starts_from && (!parsedStartsFrom || Number.isNaN(parsedStartsFrom.getTime()))) ||
+      (req.query.starts_to && (!parsedStartsTo || Number.isNaN(parsedStartsTo.getTime())))
+    ) {
+      return res.status(400).json({
+        error: ERR_MSGS.EVENT.INVALID_INPUT,
+      });
+    }
+
+    const items = await EventService.getEvents({
+      categoryId: parsedCategoryId,
+      city: req.query.city ? String(req.query.city) : undefined,
+      venue: req.query.venue ? String(req.query.venue) : undefined,
+      minPrice: parsedMinPrice,
+      maxPrice: parsedMaxPrice,
+      startsFrom: parsedStartsFrom,
+      startsTo: parsedStartsTo,
+      keyword: req.query.keyword ? String(req.query.keyword) : undefined,
+    });
+
+    return res.status(200).json({
+      count: items.length,
+      items,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post(
   '/',
   authMiddleware,
