@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { authMiddleware } from '@middlewares/authMiddleware';
-import { UserCategoryService } from '@services/userCategoryService';
+import { MeService } from '@services/meService';
 import { ERR_MSGS } from '@const/errorMessages';
 
 const router = Router();
 
-router.get('/me/categories', authMiddleware, async (req, res, next) => {
+router.get('/categories', authMiddleware, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -13,7 +13,7 @@ router.get('/me/categories', authMiddleware, async (req, res, next) => {
       });
     }
 
-    const items = await UserCategoryService.getMyCategories(req.user.userId);
+    const items = await MeService.getMyCategories(req.user.userId);
 
     return res.status(200).json({
       count: items.length,
@@ -24,7 +24,7 @@ router.get('/me/categories', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.post('/me/categories', authMiddleware, async (req, res, next) => {
+router.post('/categories', authMiddleware, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -36,14 +36,11 @@ router.post('/me/categories', authMiddleware, async (req, res, next) => {
 
     if (Number.isNaN(categoryId)) {
       return res.status(400).json({
-        error: ERR_MSGS.USER_CATEGORY.CATEGORY_ID_REQUIRED,
+        error: ERR_MSGS.ME.CATEGORY_ID_REQUIRED,
       });
     }
 
-    const result = await UserCategoryService.addCategoryToUser(
-      req.user.userId,
-      categoryId
-    );
+    const result = await MeService.addMyCategory(req.user.userId, categoryId);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -51,7 +48,7 @@ router.post('/me/categories', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.delete('/me/categories/:categoryId', authMiddleware, async (req, res, next) => {
+router.delete('/categories/:categoryId', authMiddleware, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -63,14 +60,11 @@ router.delete('/me/categories/:categoryId', authMiddleware, async (req, res, nex
 
     if (Number.isNaN(categoryId)) {
       return res.status(400).json({
-        error: ERR_MSGS.USER_CATEGORY.CATEGORY_ID_REQUIRED,
+        error: ERR_MSGS.ME.CATEGORY_ID_REQUIRED,
       });
     }
 
-    const result = await UserCategoryService.removeCategoryFromUser(
-      req.user.userId,
-      categoryId
-    );
+    const result = await MeService.removeMyCategory(req.user.userId, categoryId);
 
     return res.status(200).json(result);
   } catch (error) {

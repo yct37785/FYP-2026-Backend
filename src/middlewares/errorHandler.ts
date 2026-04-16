@@ -15,7 +15,7 @@ export const errorHandler = (
       ERR_MSGS.AUTH.INVALID_EMAIL_OR_PASSWORD,
       ERR_MSGS.AUTH.ACCOUNT_SUSPENDED,
       ERR_MSGS.AUTH.ACCOUNT_DEACTIVATED,
-      ERR_MSGS.USER_CATEGORY.USER_CATEGORY_ALREADY_EXISTS,
+      ERR_MSGS.ME.CATEGORY_ALREADY_EXISTS,
     ]);
 
     if (badRequestErrors.has(err.message)) {
@@ -26,8 +26,8 @@ export const errorHandler = (
 
     const notFoundErrors = new Set<string>([
       ERR_MSGS.AUTH.USER_NOT_FOUND,
-      ERR_MSGS.USER_CATEGORY.CATEGORY_NOT_FOUND,
-      ERR_MSGS.USER_CATEGORY.USER_CATEGORY_NOT_FOUND,
+      ERR_MSGS.ME.CATEGORY_NOT_FOUND,
+      ERR_MSGS.ME.CATEGORY_PREFERENCE_NOT_FOUND,
     ]);
 
     if (notFoundErrors.has(err.message)) {

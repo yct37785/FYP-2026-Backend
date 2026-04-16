@@ -1,4 +1,4 @@
-export interface UserCategoryItem {
+export interface MeCategoryItem {
   id: number;
   categoryId: number;
   categoryName: string;

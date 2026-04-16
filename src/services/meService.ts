@@ -1,25 +1,25 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
-import type { UserCategoryItem } from '@mytypes/userCategory';
+import type { MeCategoryItem } from '@mytypes/me';
 
 interface CategoryRow extends RowDataPacket {
   id: number;
   name: string;
 }
 
-interface UserCategoryRow extends RowDataPacket {
+interface MeCategoryRow extends RowDataPacket {
   id: number;
   category_id: number;
   category_name: string;
   created_at: Date;
 }
 
-export class UserCategoryService {
-  static async getMyCategories(userId: number): Promise<UserCategoryItem[]> {
+export class MeService {
+  static async getMyCategories(userId: number): Promise<MeCategoryItem[]> {
     const pool = Db.getPool();
 
-    const [rows] = await pool.execute<UserCategoryRow[]>(
+    const [rows] = await pool.execute<MeCategoryRow[]>(
       `
       SELECT
         uc.id,
@@ -42,7 +42,7 @@ export class UserCategoryService {
     }));
   }
 
-  static async addCategoryToUser(userId: number, categoryId: number) {
+  static async addMyCategory(userId: number, categoryId: number) {
     const pool = Db.getPool();
 
     const [categoryRows] = await pool.execute<CategoryRow[]>(
@@ -56,7 +56,7 @@ export class UserCategoryService {
     );
 
     if (categoryRows.length === 0) {
-      throw new Error(ERR_MSGS.USER_CATEGORY.CATEGORY_NOT_FOUND);
+      throw new Error(ERR_MSGS.ME.CATEGORY_NOT_FOUND);
     }
 
     const [existingRows] = await pool.execute<RowDataPacket[]>(
@@ -70,7 +70,7 @@ export class UserCategoryService {
     );
 
     if (existingRows.length > 0) {
-      throw new Error(ERR_MSGS.USER_CATEGORY.USER_CATEGORY_ALREADY_EXISTS);
+      throw new Error(ERR_MSGS.ME.CATEGORY_ALREADY_EXISTS);
     }
 
     const [result] = await pool.execute<ResultSetHeader>(
@@ -88,7 +88,7 @@ export class UserCategoryService {
     };
   }
 
-  static async removeCategoryFromUser(userId: number, categoryId: number) {
+  static async removeMyCategory(userId: number, categoryId: number) {
     const pool = Db.getPool();
 
     const [result] = await pool.execute<ResultSetHeader>(
@@ -100,7 +100,7 @@ export class UserCategoryService {
     );
 
     if (result.affectedRows === 0) {
-      throw new Error(ERR_MSGS.USER_CATEGORY.USER_CATEGORY_NOT_FOUND);
+      throw new Error(ERR_MSGS.ME.CATEGORY_PREFERENCE_NOT_FOUND);
     }
 
     return {
