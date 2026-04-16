@@ -3,6 +3,7 @@ import { authMiddleware } from '@middlewares/authMiddleware';
 import { roleMiddleware } from '@middlewares/roleMiddleware';
 import { ERR_MSGS } from '@const/errorMessages';
 import { EventService } from '@services/eventService';
+import { EventOrganizerService } from '@services/eventOrganizerService';
 
 const router = Router();
 
@@ -175,6 +176,76 @@ router.get(
       });
 
       return res.status(200).json(item);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get(
+  '/mine/:id/bookings',
+  authMiddleware,
+  roleMiddleware('organizer', 'admin'),
+  async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: ERR_MSGS.AUTH.UNAUTHORIZED,
+        });
+      }
+
+      const eventId = Number(req.params.id);
+
+      if (Number.isNaN(eventId)) {
+        return res.status(400).json({
+          error: ERR_MSGS.EVENT.INVALID_INPUT,
+        });
+      }
+
+      const items = await EventOrganizerService.getMyEventBookings(
+        eventId,
+        req.user.userId
+      );
+
+      return res.status(200).json({
+        count: items.length,
+        items,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get(
+  '/mine/:id/waitlists',
+  authMiddleware,
+  roleMiddleware('organizer', 'admin'),
+  async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: ERR_MSGS.AUTH.UNAUTHORIZED,
+        });
+      }
+
+      const eventId = Number(req.params.id);
+
+      if (Number.isNaN(eventId)) {
+        return res.status(400).json({
+          error: ERR_MSGS.EVENT.INVALID_INPUT,
+        });
+      }
+
+      const items = await EventOrganizerService.getMyEventWaitlists(
+        eventId,
+        req.user.userId
+      );
+
+      return res.status(200).json({
+        count: items.length,
+        items,
+      });
     } catch (error) {
       next(error);
     }
