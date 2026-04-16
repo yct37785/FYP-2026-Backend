@@ -54,7 +54,7 @@ async function runSetup() {
     `,
 
     `
-    CREATE TABLE events (
+    CREATE TABLE event (
       id INT AUTO_INCREMENT PRIMARY KEY,
       owner_id INT NOT NULL,
       title VARCHAR(191) NOT NULL,
@@ -74,16 +74,16 @@ async function runSetup() {
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-      CONSTRAINT fk_events_owner
+      CONSTRAINT fk_event_owner
         FOREIGN KEY (owner_id) REFERENCES users(id)
         ON DELETE CASCADE,
 
-      CONSTRAINT fk_events_category
+      CONSTRAINT fk_event_category
         FOREIGN KEY (category_id) REFERENCES category(id)
         ON DELETE RESTRICT,
 
-      INDEX idx_events_category_starts_at_status (category_id, starts_at, status),
-      UNIQUE KEY uq_events_source_external (source_name, external_event_id)
+      INDEX idx_event_category_starts_at_status (category_id, starts_at, status),
+      UNIQUE KEY uq_event_source_external (source_name, external_event_id)
     )
     `,
   ];
