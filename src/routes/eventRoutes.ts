@@ -63,8 +63,8 @@ router.post(
       venue,
       address,
       city,
-      startsAt,
-      endsAt,
+      startsAt: startsAtDate,
+      endsAt: endsAtDate,
       price: parsedPrice,
     });
 

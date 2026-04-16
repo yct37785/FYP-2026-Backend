@@ -12,8 +12,8 @@ interface CreateEventInput {
   venue: string;
   address: string;
   city: string;
-  startsAt: string;
-  endsAt: string;
+  startsAt: Date;
+  endsAt: Date;
   price: number;
 }
 
