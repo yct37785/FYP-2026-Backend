@@ -1,11 +1,60 @@
 import { Router } from 'express';
-import { AuthController } from '@controllers/authController';
+import { AuthService } from '@services/authService';
 import { authMiddleware } from '@middlewares/authMiddleware';
+import { ERR_MSGS } from '@const/errorMessages';
 
 const router = Router();
 
-router.post('/register', AuthController.register);
-router.post('/login', AuthController.login);
-router.get('/me', authMiddleware, AuthController.me);
+router.post('/register', async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        error: ERR_MSGS.AUTH.NAME_EMAIL_PASSWORD_REQUIRED,
+      });
+    }
+
+    const result = await AuthService.register({ name, email, password });
+
+    return res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        error: ERR_MSGS.AUTH.EMAIL_PASSWORD_REQUIRED,
+      });
+    }
+
+    const result = await AuthService.login({ email, password });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/me', authMiddleware, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: ERR_MSGS.AUTH.UNAUTHORIZED,
+      });
+    }
+
+    const user = await AuthService.getCurrentUser(req.user.userId);
+
+    return res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
