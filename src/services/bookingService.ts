@@ -1,7 +1,7 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
 import type { BookingItem } from '@mytypes/booking';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -43,6 +43,13 @@ interface BookingRow extends RowDataPacket {
   updated_at: Date;
 }
 
+interface WaitlistPromotionRow extends RowDataPacket {
+  id: number;
+  user_id: number;
+  event_id: number;
+  created_at: Date;
+}
+
 const mapBookingRow = (row: BookingRow): BookingItem => ({
   id: row.id,
   userId: row.user_id,
@@ -59,6 +66,82 @@ const mapBookingRow = (row: BookingRow): BookingItem => ({
 });
 
 export class BookingService {
+  private static async tryPromoteFirstWaitlistedUser(
+    eventId: number,
+    eventPrice: number,
+    connection: Awaited<ReturnType<ReturnType<typeof Db.getPool>['getConnection']>>
+  ): Promise<void> {
+    const [waitlistRows] = await connection.execute<WaitlistPromotionRow[]>(
+      `
+      SELECT
+        id,
+        user_id,
+        event_id,
+        created_at
+      FROM waitlist
+      WHERE event_id = ?
+      ORDER BY created_at ASC, id ASC
+      LIMIT 1
+      `,
+      [eventId]
+    );
+
+    if (waitlistRows.length === 0) {
+      return;
+    }
+
+    const waitlistEntry = waitlistRows[0];
+    const promotedUserId = waitlistEntry.user_id;
+
+    const [promotedUserRows] = await connection.execute<UserRow[]>(
+      `
+      SELECT id, credits
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [promotedUserId]
+    );
+
+    if (promotedUserRows.length === 0) {
+      return;
+    }
+
+    const promotedUser = promotedUserRows[0];
+    const promotedUserCredits = Number(promotedUser.credits);
+
+    if (promotedUserCredits < eventPrice) {
+      return;
+    }
+
+    if (eventPrice > 0) {
+      await connection.execute(
+        `
+        UPDATE users
+        SET credits = credits - ?
+        WHERE id = ?
+        `,
+        [eventPrice, promotedUserId]
+      );
+    }
+
+    await connection.execute(
+      `
+      INSERT INTO booking (user_id, event_id, credits_spent)
+      VALUES (?, ?, ?)
+      `,
+      [promotedUserId, eventId, eventPrice]
+    );
+
+    await connection.execute(
+      `
+      DELETE FROM waitlist
+      WHERE id = ?
+      `,
+      [waitlistEntry.id]
+    );
+  }
+
   static async createBooking(userId: number, eventId: number): Promise<BookingItem> {
     const pool = Db.getPool();
 
@@ -293,6 +376,8 @@ export class BookingService {
     }
 
     const booking = rows[0];
+    const eventId = booking.event_id;
+    const eventPrice = Number(booking.event_price);
     const creditsSpent = Number(booking.credits_spent);
 
     const connection = await pool.getConnection();
@@ -317,6 +402,12 @@ export class BookingService {
         WHERE id = ?
         `,
         [bookingId]
+      );
+
+      await BookingService.tryPromoteFirstWaitlistedUser(
+        eventId,
+        eventPrice,
+        connection
       );
 
       await connection.commit();
