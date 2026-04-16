@@ -16,7 +16,6 @@ export const errorHandler = (
       ERR_MSGS.AUTH.ACCOUNT_SUSPENDED,
       ERR_MSGS.AUTH.ACCOUNT_DEACTIVATED,
       ERR_MSGS.ME.CATEGORY_ALREADY_EXISTS,
-      ERR_MSGS.EVENT.EVENT_NOT_DRAFT,
     ]);
 
     if (badRequestErrors.has(err.message)) {

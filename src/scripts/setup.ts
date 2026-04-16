@@ -90,7 +90,7 @@ async function runSetup() {
       source ENUM('INTERNAL', 'EXTERNAL') NOT NULL DEFAULT 'INTERNAL',
       source_name VARCHAR(191) NULL,
       external_event_id VARCHAR(191) NULL,
-      status ENUM('DRAFT', 'PUBLISHED', 'SUSPENDED') NOT NULL DEFAULT 'PUBLISHED',
+      is_suspended BOOLEAN NOT NULL DEFAULT false,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -102,7 +102,7 @@ async function runSetup() {
         FOREIGN KEY (category_id) REFERENCES category(id)
         ON DELETE RESTRICT,
 
-      INDEX idx_event_category_starts_at_status (category_id, starts_at, status),
+      INDEX idx_event_category_starts_at_is_suspended (category_id, starts_at, is_suspended),
       UNIQUE KEY uq_event_source_external (source_name, external_event_id)
     )
     `,

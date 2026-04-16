@@ -1,5 +1,4 @@
 export type EventSource = 'INTERNAL' | 'EXTERNAL';
-export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'SUSPENDED';
 
 export interface EventItem {
   id: number;
@@ -18,7 +17,7 @@ export interface EventItem {
   source: EventSource;
   sourceName: string | null;
   externalEventId: string | null;
-  status: EventStatus;
+  isSuspended: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

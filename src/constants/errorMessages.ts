@@ -23,8 +23,7 @@ export const ERR_MSGS = {
     INVALID_INPUT: 'Invalid input',
     CATEGORY_NOT_FOUND: 'Category not found',
     EVENT_NOT_FOUND: 'Event not found',
-    EVENT_NOT_OWNER: 'You are not the owner of this event',
-    EVENT_NOT_DRAFT: 'Only draft events can be published',
+    EVENT_NOT_OWNER: 'You are not the owner of this event'
   },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',

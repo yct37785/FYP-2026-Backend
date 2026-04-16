@@ -1,6 +1,6 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
-import type { EventSource, EventStatus, EventItem } from '@mytypes/event';
+import type { EventSource, EventItem } from '@mytypes/event';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 interface CreateEventInput {
@@ -39,7 +39,7 @@ interface EventRow extends RowDataPacket {
   source: EventSource;
   source_name: string | null;
   external_event_id: string | null;
-  status: EventStatus;
+  is_suspended: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -61,7 +61,7 @@ const mapEventRow = (row: EventRow): EventItem => ({
   source: row.source,
   sourceName: row.source_name,
   externalEventId: row.external_event_id,
-  status: row.status,
+  isSuspended: Boolean(row.is_suspended),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -98,9 +98,8 @@ export class EventService {
         starts_at,
         ends_at,
         price,
-        source,
-        status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'INTERNAL', 'DRAFT')
+        source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'INTERNAL')
       `,
       [
         data.ownerId,
@@ -136,7 +135,7 @@ export class EventService {
         e.source,
         e.source_name,
         e.external_event_id,
-        e.status,
+        e.is_suspended,
         e.created_at,
         e.updated_at
       FROM event e
@@ -148,94 +147,5 @@ export class EventService {
     );
 
     return mapEventRow(rows[0]);
-  }
-
-  static async publishEvent(eventId: number, userId: number): Promise<EventItem> {
-    const pool = Db.getPool();
-
-    const [rows] = await pool.execute<EventRow[]>(
-      `
-      SELECT
-        e.id,
-        e.owner_id,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.status,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      WHERE e.id = ?
-      LIMIT 1
-      `,
-      [eventId]
-    );
-
-    if (rows.length === 0) {
-      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_FOUND);
-    }
-
-    const event = rows[0];
-
-    if (event.owner_id !== userId) {
-      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_OWNER);
-    }
-
-    if (event.status !== 'DRAFT') {
-      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_DRAFT);
-    }
-
-    await pool.execute(
-      `
-      UPDATE event
-      SET status = 'PUBLISHED'
-      WHERE id = ?
-      `,
-      [eventId]
-    );
-
-    const [updatedRows] = await pool.execute<EventRow[]>(
-      `
-      SELECT
-        e.id,
-        e.owner_id,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.status,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      WHERE e.id = ?
-      LIMIT 1
-      `,
-      [eventId]
-    );
-
-    return mapEventRow(updatedRows[0]);
   }
 }
