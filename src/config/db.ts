@@ -10,3 +10,12 @@ export const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
 });
+
+export const createRootConnection = () => {
+  return mysql.createConnection({
+    host: env.dbHost,
+    port: env.dbPort,
+    user: env.dbUser,
+    password: env.dbPassword,
+  });
+};
