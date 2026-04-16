@@ -30,6 +30,21 @@ interface GetEventsInput {
   keyword?: string;
 }
 
+interface UpdateEventInput {
+  eventId: number;
+  ownerId: number;
+  title: string;
+  description: string;
+  bannerUrl?: string | null;
+  categoryId: number;
+  venue: string;
+  address: string;
+  city: string;
+  startsAt: Date;
+  endsAt: Date;
+  price: number;
+}
+
 interface CategoryRow extends RowDataPacket {
   id: number;
   name: string;
@@ -162,7 +177,7 @@ export class EventService {
     return mapEventRow(rows[0]);
   }
 
-    static async getEvents(filters: GetEventsInput): Promise<EventItem[]> {
+  static async getEvents(filters: GetEventsInput): Promise<EventItem[]> {
     const pool = Db.getPool();
 
     const conditions: string[] = [];
@@ -271,7 +286,7 @@ export class EventService {
     return rows.map(mapEventRow);
   }
 
-    static async getEventById(
+  static async getEventById(
     eventId: number,
     options?: {
       ownerId?: number;
@@ -327,5 +342,178 @@ export class EventService {
     }
 
     return mapEventRow(rows[0]);
+  }
+
+  static async updateMyEvent(data: UpdateEventInput): Promise<EventItem> {
+    const pool = Db.getPool();
+
+    const [eventRows] = await pool.execute<EventRow[]>(
+      `
+      SELECT
+        e.id,
+        e.owner_id,
+        e.title,
+        e.description,
+        e.banner_url,
+        e.category_id,
+        c.name AS category_name,
+        e.venue,
+        e.address,
+        e.city,
+        e.starts_at,
+        e.ends_at,
+        e.price,
+        e.source,
+        e.source_name,
+        e.external_event_id,
+        e.is_suspended,
+        e.created_at,
+        e.updated_at
+      FROM event e
+      INNER JOIN category c ON c.id = e.category_id
+      WHERE e.id = ?
+      LIMIT 1
+      `,
+      [data.eventId]
+    );
+
+    if (eventRows.length === 0) {
+      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_FOUND);
+    }
+
+    const event = eventRows[0];
+
+    if (event.owner_id !== data.ownerId) {
+      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_OWNER);
+    }
+
+    const [categoryRows] = await pool.execute<CategoryRow[]>(
+      `
+      SELECT id, name
+      FROM category
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [data.categoryId]
+    );
+
+    if (categoryRows.length === 0) {
+      throw new Error(ERR_MSGS.EVENT.CATEGORY_NOT_FOUND);
+    }
+
+    await pool.execute(
+      `
+      UPDATE event
+      SET
+        title = ?,
+        description = ?,
+        banner_url = ?,
+        category_id = ?,
+        venue = ?,
+        address = ?,
+        city = ?,
+        starts_at = ?,
+        ends_at = ?,
+        price = ?
+      WHERE id = ?
+      `,
+      [
+        data.title,
+        data.description,
+        data.bannerUrl ?? null,
+        data.categoryId,
+        data.venue,
+        data.address,
+        data.city,
+        data.startsAt,
+        data.endsAt,
+        data.price,
+        data.eventId,
+      ]
+    );
+
+    const [updatedRows] = await pool.execute<EventRow[]>(
+      `
+      SELECT
+        e.id,
+        e.owner_id,
+        e.title,
+        e.description,
+        e.banner_url,
+        e.category_id,
+        c.name AS category_name,
+        e.venue,
+        e.address,
+        e.city,
+        e.starts_at,
+        e.ends_at,
+        e.price,
+        e.source,
+        e.source_name,
+        e.external_event_id,
+        e.is_suspended,
+        e.created_at,
+        e.updated_at
+      FROM event e
+      INNER JOIN category c ON c.id = e.category_id
+      WHERE e.id = ?
+      LIMIT 1
+      `,
+      [data.eventId]
+    );
+
+    return mapEventRow(updatedRows[0]);
+  }
+
+  static async deleteMyEvent(eventId: number, ownerId: number): Promise<void> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<EventRow[]>(
+      `
+      SELECT
+        e.id,
+        e.owner_id,
+        e.title,
+        e.description,
+        e.banner_url,
+        e.category_id,
+        c.name AS category_name,
+        e.venue,
+        e.address,
+        e.city,
+        e.starts_at,
+        e.ends_at,
+        e.price,
+        e.source,
+        e.source_name,
+        e.external_event_id,
+        e.is_suspended,
+        e.created_at,
+        e.updated_at
+      FROM event e
+      INNER JOIN category c ON c.id = e.category_id
+      WHERE e.id = ?
+      LIMIT 1
+      `,
+      [eventId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_FOUND);
+    }
+
+    const event = rows[0];
+
+    if (event.owner_id !== ownerId) {
+      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_OWNER);
+    }
+
+    await pool.execute(
+      `
+      DELETE FROM event
+      WHERE id = ?
+      `,
+      [eventId]
+    );
   }
 }
