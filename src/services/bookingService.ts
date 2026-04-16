@@ -71,6 +71,28 @@ export class BookingService {
     eventPrice: number,
     connection: Awaited<ReturnType<ReturnType<typeof Db.getPool>['getConnection']>>
   ): Promise<void> {
+    const [candidateRows] = await connection.execute<UserRow[]>(
+      `
+      SELECT
+        u.id,
+        u.credits
+      FROM waitlist w
+      INNER JOIN users u ON u.id = w.user_id
+      WHERE w.event_id = ?
+        AND u.credits >= ?
+      ORDER BY w.created_at ASC, w.id ASC
+      LIMIT 1
+      `,
+      [eventId, eventPrice]
+    );
+
+    if (candidateRows.length === 0) {
+      return;
+    }
+
+    const promotedUser = candidateRows[0];
+    const promotedUserId = promotedUser.id;
+
     const [waitlistRows] = await connection.execute<WaitlistPromotionRow[]>(
       `
       SELECT
@@ -80,10 +102,11 @@ export class BookingService {
         created_at
       FROM waitlist
       WHERE event_id = ?
+        AND user_id = ?
       ORDER BY created_at ASC, id ASC
       LIMIT 1
       `,
-      [eventId]
+      [eventId, promotedUserId]
     );
 
     if (waitlistRows.length === 0) {
@@ -91,28 +114,6 @@ export class BookingService {
     }
 
     const waitlistEntry = waitlistRows[0];
-    const promotedUserId = waitlistEntry.user_id;
-
-    const [promotedUserRows] = await connection.execute<UserRow[]>(
-      `
-      SELECT id, credits
-      FROM users
-      WHERE id = ?
-      LIMIT 1
-      `,
-      [promotedUserId]
-    );
-
-    if (promotedUserRows.length === 0) {
-      return;
-    }
-
-    const promotedUser = promotedUserRows[0];
-    const promotedUserCredits = Number(promotedUser.credits);
-
-    if (promotedUserCredits < eventPrice) {
-      return;
-    }
 
     if (eventPrice > 0) {
       await connection.execute(
