@@ -1,7 +1,27 @@
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
 import { env } from '@config/env';
-import { AuthService } from '@services/authService';
 import { categoryNames } from '@const/categories';
+import type { UserRole } from '@mytypes/user';
+
+interface SeedUser {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+const createFixedSetupToken = (payload: {
+  userId: number;
+  email: string;
+  role: UserRole;
+}) => {
+  return jwt.sign(payload, env.jwtSecret, {
+    noTimestamp: true,
+  });
+};
 
 async function runSetup() {
   const rootConnection = await Db.createRootConnection();
@@ -118,13 +138,50 @@ async function runSetup() {
     }
 
     // 6) seed users
-    await AuthService.register({
-      name: 'John Tan',
-      email: 'john@example.com',
-      password: 'password123',
-      role: 'user'
-    });
+    const seedUsers: SeedUser[] = [
+      {
+        name: 'John Tan',
+        email: 'john@example.com',
+        password: 'password123',
+        role: 'user',
+      },
+      {
+        name: 'Olivia Organizer',
+        email: 'organizer@example.com',
+        password: 'password123',
+        role: 'organizer',
+      },
+      {
+        name: 'Adam Admin',
+        email: 'admin@example.com',
+        password: 'password123',
+        role: 'admin',
+      },
+    ];
 
+    for (const user of seedUsers) {
+      const passwordHash = await bcrypt.hash(user.password, 10);
+
+      const [result] = await pool.execute<ResultSetHeader>(
+        `
+        INSERT INTO users (name, email, password_hash, role)
+        VALUES (?, ?, ?, ?)
+        `,
+        [user.name, user.email, passwordHash, user.role]
+      );
+
+      const token = createFixedSetupToken({
+        userId: result.insertId,
+        email: user.email,
+        role: user.role,
+      });
+
+      console.log('----------------------------------------');
+      console.log(`Role: ${user.role}`);
+      console.log(`Token: ${token}`);
+    }
+
+    console.log('----------------------------------------');
     console.log('Setup completed successfully.');
   } catch (error) {
     try {
