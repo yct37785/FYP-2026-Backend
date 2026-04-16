@@ -1,6 +1,5 @@
 import express from 'express';
 import authRoutes from '@routes/authRoutes';
-import setupRoutes from '@routes/setupRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { env } from '@config/env';
@@ -13,7 +12,6 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend is running' });
 });
 
-app.use('/api/setup', setupRoutes);
 app.use('/api/auth', authRoutes);
 
 app.use(notFound);

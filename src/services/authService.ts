@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
-import { db } from '@config/db';
+import { Db } from '@config/db';
 import type { LoginInput, RegisterInput, UserRole } from '@mytypes/auth';
 import { signToken } from '@utils/jwt';
 import { ERR_MSGS } from '@const/errorMessages';
@@ -16,9 +16,10 @@ interface UserRow extends RowDataPacket {
 
 export class AuthService {
   static async register(data: RegisterInput) {
+    const pool = Db.getPool();
     const { name, email, password } = data;
 
-    const [existingUsers] = await db.execute<UserRow[]>(
+    const [existingUsers] = await pool.execute<UserRow[]>(
       'SELECT id FROM users WHERE email = ?',
       [email]
     );
@@ -29,7 +30,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const [userResult] = await db.execute<ResultSetHeader>(
+    const [userResult] = await pool.execute<ResultSetHeader>(
       `
       INSERT INTO users (name, email, password_hash, role)
       VALUES (?, ?, ?, ?)
@@ -58,9 +59,10 @@ export class AuthService {
   }
 
   static async login(data: LoginInput) {
+    const pool = Db.getPool();
     const { email, password } = data;
 
-    const [rows] = await db.execute<UserRow[]>(
+    const [rows] = await pool.execute<UserRow[]>(
       `
       SELECT id, name, email, password_hash, role, status
       FROM users
@@ -108,7 +110,9 @@ export class AuthService {
   }
 
   static async getCurrentUser(userId: number) {
-    const [rows] = await db.execute<UserRow[]>(
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<UserRow[]>(
       `
       SELECT id, name, email, password_hash, role, status
       FROM users
