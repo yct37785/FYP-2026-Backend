@@ -26,6 +26,7 @@ export const ERR_MSGS = {
     EVENT_NOT_OWNER: 'You are not the owner of this event'
   },
   BOOKING: {
+    EVENT_FULL: 'Event is full',
     EVENT_SUSPENDED: 'Event is suspended',
     ALREADY_BOOKED: 'You have already booked this event',
     INSUFFICIENT_CREDITS: 'Insufficient credits',
@@ -34,6 +35,7 @@ export const ERR_MSGS = {
   WAITLIST: {
     ALREADY_WAITLISTED: 'You are already waitlisted for this event',
     WAITLIST_NOT_FOUND: 'Waitlist entry not found',
+    EVENT_HAS_SPACE: 'Event still has available space',
   },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
