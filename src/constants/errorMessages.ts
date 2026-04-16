@@ -18,6 +18,13 @@ export const ERR_MSGS = {
     CATEGORY_ALREADY_EXISTS: 'Category already added to user preferences',
     CATEGORY_PREFERENCE_NOT_FOUND: 'User category preference not found',
   },
+  EVENT: {
+    INVALID_INPUT: 'Invalid input',
+    CATEGORY_NOT_FOUND: 'Category not found',
+    EVENT_NOT_FOUND: 'Event not found',
+    EVENT_NOT_OWNER: 'You are not the owner of this event',
+    EVENT_NOT_DRAFT: 'Only draft events can be published',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',

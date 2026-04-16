@@ -16,6 +16,7 @@ export const errorHandler = (
       ERR_MSGS.AUTH.ACCOUNT_SUSPENDED,
       ERR_MSGS.AUTH.ACCOUNT_DEACTIVATED,
       ERR_MSGS.ME.CATEGORY_ALREADY_EXISTS,
+      ERR_MSGS.EVENT.EVENT_NOT_DRAFT,
     ]);
 
     if (badRequestErrors.has(err.message)) {
@@ -24,10 +25,22 @@ export const errorHandler = (
       });
     }
 
+    const forbiddenErrors = new Set<string>([
+      ERR_MSGS.EVENT.EVENT_NOT_OWNER,
+    ]);
+
+    if (forbiddenErrors.has(err.message)) {
+      return res.status(403).json({
+        error: err.message,
+      });
+    }
+
     const notFoundErrors = new Set<string>([
       ERR_MSGS.AUTH.USER_NOT_FOUND,
       ERR_MSGS.ME.CATEGORY_NOT_FOUND,
       ERR_MSGS.ME.CATEGORY_PREFERENCE_NOT_FOUND,
+      ERR_MSGS.EVENT.CATEGORY_NOT_FOUND,
+      ERR_MSGS.EVENT.EVENT_NOT_FOUND,
     ]);
 
     if (notFoundErrors.has(err.message)) {
