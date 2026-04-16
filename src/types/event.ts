@@ -22,17 +22,3 @@ export interface EventItem {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export interface CreateEventInput {
-  ownerId: number;
-  title: string;
-  description: string;
-  bannerUrl?: string | null;
-  categoryId: number;
-  venue: string;
-  address: string;
-  city: string;
-  startsAt: string;
-  endsAt: string;
-  price: number;
-}

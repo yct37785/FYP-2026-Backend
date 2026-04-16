@@ -1,9 +1,21 @@
 import bcrypt from 'bcrypt';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
-import type { LoginInput, RegisterInput, UserRole } from '@mytypes/auth';
+import type { UserRole } from '@mytypes/auth';
 import { signToken } from '@utils/jwt';
 import { ERR_MSGS } from '@const/errorMessages';
+
+interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+interface LoginInput {
+  email: string;
+  password: string;
+}
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -17,7 +29,7 @@ interface UserRow extends RowDataPacket {
 export class AuthService {
   static async register(data: RegisterInput) {
     const pool = Db.getPool();
-    const { name, email, password } = data;
+    const { name, email, password, role } = data;
 
     const [existingUsers] = await pool.execute<UserRow[]>(
       'SELECT id FROM users WHERE email = ?',
@@ -39,7 +51,6 @@ export class AuthService {
     );
 
     const userId = userResult.insertId;
-    const role: UserRole = 'user';
 
     const token = signToken({
       userId,

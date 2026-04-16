@@ -1,7 +1,21 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
-import type { EventSource, EventStatus, CreateEventInput, EventItem } from '@mytypes/event';
+import type { EventSource, EventStatus, EventItem } from '@mytypes/event';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+
+interface CreateEventInput {
+  ownerId: number;
+  title: string;
+  description: string;
+  bannerUrl?: string | null;
+  categoryId: number;
+  venue: string;
+  address: string;
+  city: string;
+  startsAt: string;
+  endsAt: string;
+  price: number;
+}
 
 interface CategoryRow extends RowDataPacket {
   id: number;

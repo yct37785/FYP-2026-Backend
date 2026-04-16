@@ -117,11 +117,12 @@ async function runSetup() {
       );
     }
 
-    // 6) seed users using app service
+    // 6) seed users
     await AuthService.register({
       name: 'John Tan',
       email: 'john@example.com',
       password: 'password123',
+      role: 'user'
     });
 
     console.log('Setup completed successfully.');
