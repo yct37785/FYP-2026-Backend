@@ -15,6 +15,7 @@ interface CreateEventInput {
   startsAt: Date;
   endsAt: Date;
   price: number;
+  pax: number;
 }
 
 interface GetEventsInput {
@@ -43,6 +44,7 @@ interface CategoryRow extends RowDataPacket {
 interface EventRow extends RowDataPacket {
   id: number;
   owner_id: number;
+  owner_name: string;
   title: string;
   description: string;
   banner_url: string | null;
@@ -54,6 +56,7 @@ interface EventRow extends RowDataPacket {
   starts_at: Date;
   ends_at: Date;
   price: number;
+  pax: number;
   source: EventSource;
   source_name: string | null;
   external_event_id: string | null;
@@ -65,6 +68,7 @@ interface EventRow extends RowDataPacket {
 const mapEventRow = (row: EventRow): EventItem => ({
   id: row.id,
   ownerId: row.owner_id,
+  ownerName: row.owner_name,
   title: row.title,
   description: row.description,
   bannerUrl: row.banner_url,
@@ -76,6 +80,7 @@ const mapEventRow = (row: EventRow): EventItem => ({
   startsAt: row.starts_at,
   endsAt: row.ends_at,
   price: Number(row.price),
+  pax: row.pax,
   source: row.source,
   sourceName: row.source_name,
   externalEventId: row.external_event_id,
@@ -116,8 +121,9 @@ export class EventService {
         starts_at,
         ends_at,
         price,
+        pax,
         source
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'INTERNAL')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'INTERNAL')
       `,
       [
         data.ownerId,
@@ -131,6 +137,7 @@ export class EventService {
         data.startsAt,
         data.endsAt,
         data.price,
+        data.pax,
       ]
     );
 
@@ -139,6 +146,7 @@ export class EventService {
       SELECT
         e.id,
         e.owner_id,
+        u.name AS owner_name,
         e.title,
         e.description,
         e.banner_url,
@@ -150,6 +158,7 @@ export class EventService {
         e.starts_at,
         e.ends_at,
         e.price,
+        e.pax,
         e.source,
         e.source_name,
         e.external_event_id,
@@ -158,6 +167,7 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
+      INNER JOIN users u ON u.id = e.owner_id
       WHERE e.id = ?
       LIMIT 1
       `,
@@ -226,11 +236,13 @@ export class EventService {
           OR e.address LIKE ?
           OR e.city LIKE ?
           OR c.name LIKE ?
+          OR u.name LIKE ?
         )
       `);
 
       const keywordValue = `%${filters.keyword}%`;
       values.push(
+        keywordValue,
         keywordValue,
         keywordValue,
         keywordValue,
@@ -248,6 +260,7 @@ export class EventService {
       SELECT
         e.id,
         e.owner_id,
+        u.name AS owner_name,
         e.title,
         e.description,
         e.banner_url,
@@ -259,6 +272,7 @@ export class EventService {
         e.starts_at,
         e.ends_at,
         e.price,
+        e.pax,
         e.source,
         e.source_name,
         e.external_event_id,
@@ -267,6 +281,7 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
+      INNER JOIN users u ON u.id = e.owner_id
       ${whereClause}
       ORDER BY e.starts_at ASC, e.id ASC
       `,
@@ -302,6 +317,7 @@ export class EventService {
       SELECT
         e.id,
         e.owner_id,
+        u.name AS owner_name,
         e.title,
         e.description,
         e.banner_url,
@@ -313,6 +329,7 @@ export class EventService {
         e.starts_at,
         e.ends_at,
         e.price,
+        e.pax,
         e.source,
         e.source_name,
         e.external_event_id,
@@ -321,6 +338,7 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
+      INNER JOIN users u ON u.id = e.owner_id
       WHERE ${conditions.join(' AND ')}
       LIMIT 1
       `,
@@ -342,6 +360,7 @@ export class EventService {
       SELECT
         e.id,
         e.owner_id,
+        u.name AS owner_name,
         e.title,
         e.description,
         e.banner_url,
@@ -353,6 +372,7 @@ export class EventService {
         e.starts_at,
         e.ends_at,
         e.price,
+        e.pax,
         e.source,
         e.source_name,
         e.external_event_id,
@@ -361,6 +381,7 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
+      INNER JOIN users u ON u.id = e.owner_id
       WHERE e.id = ?
       LIMIT 1
       `,
@@ -403,8 +424,9 @@ export class EventService {
     const nextStartsAt = data.startsAt ?? event.starts_at;
     const nextEndsAt = data.endsAt ?? event.ends_at;
     const nextPrice = data.price ?? Number(event.price);
+    const nextPax = data.pax ?? event.pax;
 
-    if (nextEndsAt <= nextStartsAt) {
+    if (nextEndsAt <= nextStartsAt || nextPax <= 0) {
       throw new Error(ERR_MSGS.EVENT.INVALID_INPUT);
     }
 
@@ -421,7 +443,8 @@ export class EventService {
         city = ?,
         starts_at = ?,
         ends_at = ?,
-        price = ?
+        price = ?,
+        pax = ?
       WHERE id = ?
       `,
       [
@@ -435,6 +458,7 @@ export class EventService {
         nextStartsAt,
         nextEndsAt,
         nextPrice,
+        nextPax,
         data.eventId,
       ]
     );
@@ -444,6 +468,7 @@ export class EventService {
       SELECT
         e.id,
         e.owner_id,
+        u.name AS owner_name,
         e.title,
         e.description,
         e.banner_url,
@@ -455,6 +480,7 @@ export class EventService {
         e.starts_at,
         e.ends_at,
         e.price,
+        e.pax,
         e.source,
         e.source_name,
         e.external_event_id,
@@ -463,6 +489,7 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
+      INNER JOIN users u ON u.id = e.owner_id
       WHERE e.id = ?
       LIMIT 1
       `,
@@ -480,6 +507,7 @@ export class EventService {
       SELECT
         e.id,
         e.owner_id,
+        u.name AS owner_name,
         e.title,
         e.description,
         e.banner_url,
@@ -491,6 +519,7 @@ export class EventService {
         e.starts_at,
         e.ends_at,
         e.price,
+        e.pax,
         e.source,
         e.source_name,
         e.external_event_id,
@@ -499,6 +528,7 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
+      INNER JOIN users u ON u.id = e.owner_id
       WHERE e.id = ?
       LIMIT 1
       `,

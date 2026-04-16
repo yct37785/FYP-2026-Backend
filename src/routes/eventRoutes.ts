@@ -32,8 +32,10 @@ router.get('/public', async (req, res, next) => {
       (req.query.category_id && Number.isNaN(parsedCategoryId)) ||
       (req.query.min_price && Number.isNaN(parsedMinPrice)) ||
       (req.query.max_price && Number.isNaN(parsedMaxPrice)) ||
-      (req.query.starts_from && (!parsedStartsFrom || Number.isNaN(parsedStartsFrom.getTime()))) ||
-      (req.query.starts_to && (!parsedStartsTo || Number.isNaN(parsedStartsTo.getTime())))
+      (req.query.starts_from &&
+        (!parsedStartsFrom || Number.isNaN(parsedStartsFrom.getTime()))) ||
+      (req.query.starts_to &&
+        (!parsedStartsTo || Number.isNaN(parsedStartsTo.getTime())))
     ) {
       return res.status(400).json({
         error: ERR_MSGS.EVENT.INVALID_INPUT,
@@ -210,6 +212,7 @@ router.put(
         startsAt,
         endsAt,
         price,
+        pax,
       } = req.body;
 
       const parsedCategoryId =
@@ -224,6 +227,9 @@ router.put(
       const parsedPrice =
         price !== undefined ? Number(price) : undefined;
 
+      const parsedPax =
+        pax !== undefined ? Number(pax) : undefined;
+
       if (
         (title !== undefined && !title) ||
         (description !== undefined && !description) ||
@@ -236,18 +242,16 @@ router.put(
         (endsAt !== undefined &&
           (!endsAtDate || Number.isNaN(endsAtDate.getTime()))) ||
         (parsedPrice !== undefined &&
-          (Number.isNaN(parsedPrice) || parsedPrice < 0))
+          (Number.isNaN(parsedPrice) || parsedPrice < 0)) ||
+        (parsedPax !== undefined &&
+          (Number.isNaN(parsedPax) || parsedPax <= 0))
       ) {
         return res.status(400).json({
           error: ERR_MSGS.EVENT.INVALID_INPUT,
         });
       }
 
-      if (
-        startsAtDate &&
-        endsAtDate &&
-        endsAtDate <= startsAtDate
-      ) {
+      if (startsAtDate && endsAtDate && endsAtDate <= startsAtDate) {
         return res.status(400).json({
           error: ERR_MSGS.EVENT.INVALID_INPUT,
         });
@@ -266,6 +270,7 @@ router.put(
         ...(startsAtDate !== undefined ? { startsAt: startsAtDate } : {}),
         ...(endsAtDate !== undefined ? { endsAt: endsAtDate } : {}),
         ...(parsedPrice !== undefined ? { price: parsedPrice } : {}),
+        ...(parsedPax !== undefined ? { pax: parsedPax } : {}),
       });
 
       return res.status(200).json(result);
@@ -329,12 +334,14 @@ router.post(
         startsAt,
         endsAt,
         price,
+        pax,
       } = req.body;
 
       const parsedCategoryId = Number(categoryId);
       const startsAtDate = new Date(startsAt);
       const endsAtDate = new Date(endsAt);
       const parsedPrice = Number(price);
+      const parsedPax = Number(pax);
 
       if (
         !title ||
@@ -347,7 +354,9 @@ router.post(
         Number.isNaN(endsAtDate.getTime()) ||
         endsAtDate <= startsAtDate ||
         Number.isNaN(parsedPrice) ||
-        parsedPrice < 0
+        parsedPrice < 0 ||
+        Number.isNaN(parsedPax) ||
+        parsedPax <= 0
       ) {
         return res.status(400).json({
           error: ERR_MSGS.EVENT.INVALID_INPUT,
@@ -366,6 +375,7 @@ router.post(
         startsAt: startsAtDate,
         endsAt: endsAtDate,
         price: parsedPrice,
+        pax: parsedPax,
       });
 
       return res.status(201).json(result);

@@ -40,6 +40,7 @@ async function runSetup() {
       password_hash VARCHAR(255) NOT NULL,
       role ENUM('user', 'organizer', 'admin') NOT NULL DEFAULT 'user',
       status ENUM('active', 'suspended', 'deactivated') NOT NULL DEFAULT 'active',
+      credits DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
@@ -87,6 +88,7 @@ async function runSetup() {
       starts_at DATETIME NOT NULL,
       ends_at DATETIME NOT NULL,
       price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+      pax INT NOT NULL DEFAULT 1,
       source ENUM('INTERNAL', 'EXTERNAL') NOT NULL DEFAULT 'INTERNAL',
       source_name VARCHAR(191) NULL,
       external_event_id VARCHAR(191) NULL,
@@ -138,24 +140,27 @@ async function runSetup() {
     }
 
     // 6) seed users
-    const seedUsers: SeedUser[] = [
+    const seedUsers = [
       {
         name: 'John Tan',
         email: 'john@example.com',
         password: 'password123',
-        role: 'user',
+        role: 'user' as const,
+        credits: 100.0,
       },
       {
         name: 'Olivia Organizer',
         email: 'organizer@example.com',
         password: 'password123',
-        role: 'organizer',
+        role: 'organizer' as const,
+        credits: 100.0,
       },
       {
         name: 'Adam Admin',
         email: 'admin@example.com',
         password: 'password123',
-        role: 'admin',
+        role: 'admin' as const,
+        credits: 100.0,
       },
     ];
 
@@ -164,8 +169,8 @@ async function runSetup() {
 
       const [result] = await pool.execute<ResultSetHeader>(
         `
-        INSERT INTO users (name, email, password_hash, role)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users (name, email, password_hash, role, credits)
+        VALUES (?, ?, ?, ?, ?)
         `,
         [user.name, user.email, passwordHash, user.role]
       );

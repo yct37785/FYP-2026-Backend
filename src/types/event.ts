@@ -3,6 +3,7 @@ export type EventSource = 'INTERNAL' | 'EXTERNAL';
 export interface EventItem {
   id: number;
   ownerId: number;
+  ownerName: string;
   title: string;
   description: string;
   bannerUrl: string | null;
@@ -14,6 +15,7 @@ export interface EventItem {
   startsAt: Date;
   endsAt: Date;
   price: number;
+  pax: number;
   source: EventSource;
   sourceName: string | null;
   externalEventId: string | null;
