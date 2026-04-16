@@ -20,6 +20,13 @@ export const seedUsers: SeedUser[] = [
     credits: 100.0,
   },
   {
+    name: 'Jane Lim',
+    email: 'jane@example.com',
+    password: 'password123',
+    role: 'user',
+    credits: 100.0,
+  },
+  {
     name: 'Olivia Organizer',
     email: 'organizer@example.com',
     password: 'password123',

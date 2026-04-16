@@ -70,12 +70,13 @@ async function runSetup() {
 
       console.log('----------------------------------------');
       console.log(`Role: ${user.role}`);
+      console.log(`Email: ${user.email}`);
       console.log(`Token: ${token}`);
     }
 
-    // 7) seed events
+    // 7) seed events (hardcoded seeded organizer ID)
     const seedEvents = generateSeedEvents(20, {
-      ownerId: 2,
+      ownerId: 3,
       categoryCount: seedCategories.length,
     });
 
@@ -118,7 +119,19 @@ async function runSetup() {
     }
 
     console.log('----------------------------------------');
-    console.log(`Seeded ${seedEvents.length} events for owner_id=2`);
+    console.log(`Seeded ${seedEvents.length} events for owner_id=3`);
+
+    // 8) seed one confirmed booking for the first event
+    await pool.execute(
+      `
+      INSERT INTO booking (user_id, event_id, credits_spent)
+      VALUES (?, ?, ?)
+      `,
+      [2, 1, 0]
+    );
+
+    console.log('----------------------------------------');
+    console.log('Seeded booking: user_id=2 booked event_id=1');
 
     console.log('----------------------------------------');
     console.log('Setup completed successfully.');

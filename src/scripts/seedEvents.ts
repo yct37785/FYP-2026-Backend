@@ -78,13 +78,36 @@ export const generateSeedEvents = (
     categoryCount?: number;
   }
 ): SeedEvent[] => {
-  const ownerId = options?.ownerId ?? 2;
+  const ownerId = options?.ownerId ?? 3;
   const categoryCount = options?.categoryCount ?? 14;
 
   const events: SeedEvent[] = [];
   const now = new Date();
 
-  for (let i = 0; i < count; i += 1) {
+  const firstStartsAt = addDays(now, 7);
+  firstStartsAt.setUTCHours(19, 0, 0, 0);
+
+  const firstEndsAt = addHours(firstStartsAt, 2);
+
+  // push a harcoded event with 1 pax to test waitlist
+  events.push({
+    ownerId,
+    title: 'One Pax Test Event',
+    description: 'Seeded event with pax=1 for waitlist testing.',
+    bannerUrl: 'https://example.com/banner-1.jpg',
+    categoryId: 1,
+    venue: 'SIM Campus Hall',
+    address: '461 Clementi Road',
+    city: 'Singapore',
+    startsAt: firstStartsAt,
+    endsAt: firstEndsAt,
+    price: 0,
+    pax: 1,
+    source: 'INTERNAL',
+  });
+
+  // start generating random events
+  for (let i = 1; i < count; i += 1) {
     const pickedVenue = pickOne(venues);
     const startsAtBase = addDays(now, randomInt(1, 90));
 
