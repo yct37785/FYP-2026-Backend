@@ -1,11 +1,16 @@
 import { Router } from 'express';
 import { authMiddleware } from '@middlewares/authMiddleware';
+import { roleMiddleware } from '@middlewares/roleMiddleware';
 import { ERR_MSGS } from '@const/errorMessages';
 import { EventService } from '@services/eventService';
 
 const router = Router();
 
-router.post('/', authMiddleware, async (req, res, next) => {
+router.post(
+  '/',
+  authMiddleware,
+  roleMiddleware('organizer', 'admin'),
+  async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -69,7 +74,11 @@ router.post('/', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.patch('/:id/publish', authMiddleware, async (req, res, next) => {
+router.patch(
+  '/:id/publish',
+  authMiddleware,
+  roleMiddleware('organizer', 'admin'),
+  async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({

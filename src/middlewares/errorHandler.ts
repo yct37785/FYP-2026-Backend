@@ -26,6 +26,7 @@ export const errorHandler = (
     }
 
     const forbiddenErrors = new Set<string>([
+      ERR_MSGS.AUTH.FORBIDDEN,
       ERR_MSGS.EVENT.EVENT_NOT_OWNER,
     ]);
 

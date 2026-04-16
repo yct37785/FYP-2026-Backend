@@ -5,6 +5,7 @@ export const ERR_MSGS = {
     EMAIL_ALREADY_REGISTERED: 'Email is already registered',
     INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
     UNAUTHORIZED: 'Unauthorized',
+    FORBIDDEN: 'Forbidden',
     AUTH_HEADER_REQUIRED: 'Authorization header is required',
     INVALID_AUTH_FORMAT: 'Invalid authorization format. Use Bearer <token>',
     INVALID_OR_EXPIRED_TOKEN: 'Invalid or expired token',
