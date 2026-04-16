@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
-import type { UserRole } from '@mytypes/auth';
+import type { UserRole, UserStatus } from '@mytypes/user';
 import { signToken } from '@utils/jwt';
 import { ERR_MSGS } from '@const/errorMessages';
 
@@ -23,7 +23,7 @@ interface UserRow extends RowDataPacket {
   email: string;
   password_hash: string;
   role: UserRole;
-  status: 'active' | 'suspended' | 'deactivated';
+  status: UserStatus;
 }
 
 export class AuthService {
@@ -47,7 +47,7 @@ export class AuthService {
       INSERT INTO users (name, email, password_hash, role)
       VALUES (?, ?, ?, ?)
       `,
-      [name, email, passwordHash, 'user']
+      [name, email, passwordHash, role]
     );
 
     const userId = userResult.insertId;

@@ -1,4 +1,4 @@
-export type UserRole = 'user' | 'organizer' | 'admin';
+import { UserRole } from '@mytypes/user';
 
 export interface JwtPayloadData {
   userId: number;
