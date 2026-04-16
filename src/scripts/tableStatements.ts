@@ -103,4 +103,24 @@ export const tableStatements: string[] = [
     CONSTRAINT uq_booking_user_event UNIQUE (user_id, event_id)
   )
   `,
+
+  `
+  CREATE TABLE waitlist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    event_id INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_waitlist_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_waitlist_event
+      FOREIGN KEY (event_id) REFERENCES event(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT uq_waitlist_user_event UNIQUE (user_id, event_id)
+  )
+  `,
 ];
