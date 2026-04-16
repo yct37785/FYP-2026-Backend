@@ -3,6 +3,7 @@ import { ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
 import { env } from '@config/env';
 import { seedCategories, seedUsers } from './seedUsers';
+import { generateSeedEvents } from './seedEvents';
 import { schemaResetStatements, tableStatements } from './tableStatements';
 import jwt from 'jsonwebtoken';
 import type { UserRole } from '@mytypes/user';
@@ -71,6 +72,53 @@ async function runSetup() {
       console.log(`Role: ${user.role}`);
       console.log(`Token: ${token}`);
     }
+
+    // 7) seed events
+    const seedEvents = generateSeedEvents(20, {
+      ownerId: 2,
+      categoryCount: seedCategories.length,
+    });
+
+    for (const event of seedEvents) {
+      await pool.execute(
+        `
+        INSERT INTO event (
+          owner_id,
+          title,
+          description,
+          banner_url,
+          category_id,
+          venue,
+          address,
+          city,
+          starts_at,
+          ends_at,
+          price,
+          pax,
+          source
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          event.ownerId,
+          event.title,
+          event.description,
+          event.bannerUrl,
+          event.categoryId,
+          event.venue,
+          event.address,
+          event.city,
+          event.startsAt,
+          event.endsAt,
+          event.price,
+          event.pax,
+          event.source,
+        ]
+      );
+    }
+
+    console.log('----------------------------------------');
+    console.log(`Seeded ${seedEvents.length} events for owner_id=2`);
 
     console.log('----------------------------------------');
     console.log('Setup completed successfully.');
