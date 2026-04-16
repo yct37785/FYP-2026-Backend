@@ -4,113 +4,120 @@ import { AuthService } from '@services/authService';
 import { categoryNames } from '@const/categories';
 
 async function runSetup() {
-  const connection = await Db.createRootConnection();
+  const rootConnection = await Db.createRootConnection();
 
-  const schemaStatements: string[] = [
+  const schemaResetStatements: string[] = [
     `DROP DATABASE IF EXISTS \`${env.dbName}\``,
     `CREATE DATABASE \`${env.dbName}\``,
-    `USE \`${env.dbName}\``,
+  ];
+
+  const tableStatements: string[] = [
+    `
+    CREATE TABLE users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(150) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      role ENUM('user', 'organizer', 'admin') NOT NULL DEFAULT 'user',
+      status ENUM('active', 'suspended', 'deactivated') NOT NULL DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+    `,
 
     `
-  CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('user', 'organizer', 'admin') NOT NULL DEFAULT 'user',
-    status ENUM('active', 'suspended', 'deactivated') NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-  )
-  `,
+    CREATE TABLE category (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+    `,
 
     `
-  CREATE TABLE category (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-  )
-  `,
+    CREATE TABLE user_categories (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      category_id INT NOT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+      CONSTRAINT fk_user_categories_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE,
+
+      CONSTRAINT fk_user_categories_category
+        FOREIGN KEY (category_id) REFERENCES category(id)
+        ON DELETE CASCADE,
+
+      CONSTRAINT uq_user_category UNIQUE (user_id, category_id)
+    )
+    `,
 
     `
-  CREATE TABLE user_categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    category_id INT NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CREATE TABLE events (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      owner_id INT NOT NULL,
+      title VARCHAR(191) NOT NULL,
+      description TEXT NOT NULL,
+      banner_url VARCHAR(255) NULL,
+      category_id INT NOT NULL,
+      venue VARCHAR(191) NOT NULL,
+      address VARCHAR(255) NOT NULL,
+      city VARCHAR(100) NOT NULL,
+      starts_at DATETIME NOT NULL,
+      ends_at DATETIME NOT NULL,
+      price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+      source ENUM('INTERNAL', 'EXTERNAL') NOT NULL DEFAULT 'INTERNAL',
+      source_name VARCHAR(191) NULL,
+      external_event_id VARCHAR(191) NULL,
+      status ENUM('DRAFT', 'PUBLISHED', 'REMOVED') NOT NULL DEFAULT 'PUBLISHED',
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_user_categories_user
-      FOREIGN KEY (user_id) REFERENCES users(id)
-      ON DELETE CASCADE,
+      CONSTRAINT fk_events_owner
+        FOREIGN KEY (owner_id) REFERENCES users(id)
+        ON DELETE CASCADE,
 
-    CONSTRAINT fk_user_categories_category
-      FOREIGN KEY (category_id) REFERENCES category(id)
-      ON DELETE CASCADE,
+      CONSTRAINT fk_events_category
+        FOREIGN KEY (category_id) REFERENCES category(id)
+        ON DELETE RESTRICT,
 
-    CONSTRAINT uq_user_category UNIQUE (user_id, category_id)
-  )
-  `,
-
-    `
-  CREATE TABLE events (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    owner_id INT NOT NULL,
-    title VARCHAR(191) NOT NULL,
-    description TEXT NOT NULL,
-    banner_url VARCHAR(255) NULL,
-    category_id INT NOT NULL,
-    venue VARCHAR(191) NOT NULL,
-    address VARCHAR(255) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    starts_at DATETIME NOT NULL,
-    ends_at DATETIME NOT NULL,
-    price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    source ENUM('INTERNAL', 'EXTERNAL') NOT NULL DEFAULT 'INTERNAL',
-    source_name VARCHAR(191) NULL,
-    external_event_id VARCHAR(191) NULL,
-    status ENUM('DRAFT', 'PUBLISHED', 'REMOVED') NOT NULL DEFAULT 'PUBLISHED',
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_events_owner
-      FOREIGN KEY (owner_id) REFERENCES users(id)
-      ON DELETE CASCADE,
-
-    CONSTRAINT fk_events_category
-      FOREIGN KEY (category_id) REFERENCES category(id)
-      ON DELETE RESTRICT,
-
-    INDEX idx_events_category_starts_at_status (category_id, starts_at, status),
-    UNIQUE KEY uq_events_source_external (source_name, external_event_id)
-  )
-  `,
+      INDEX idx_events_category_starts_at_status (category_id, starts_at, status),
+      UNIQUE KEY uq_events_source_external (source_name, external_event_id)
+    )
+    `,
   ];
 
   try {
     console.log(`Resetting database: ${env.dbName}`);
 
-    // TODO: drop and create schema first before anything else
-
+    // 1) close app pool before dropping schema
     await Db.closePool();
 
-    for (const statement of schemaStatements) {
-      await connection.query(statement);
+    // 2) drop + create database using root connection
+    for (const statement of schemaResetStatements) {
+      await rootConnection.query(statement);
     }
 
-    // seed categories using root connection
+    await rootConnection.end();
+
+    // 3) recreate app pool so it points to the fresh schema
+    const pool = await Db.resetPool();
+
+    // 4) create tables using app pool
+    for (const statement of tableStatements) {
+      await pool.query(statement);
+    }
+
+    // 5) seed categories
     for (const categoryName of categoryNames) {
-      await connection.execute(
+      await pool.execute(
         `INSERT INTO category (name) VALUES (?)`,
         [categoryName]
       );
     }
 
-    await connection.end();
-
-    await Db.resetPool();
-
-    // seed users using app service
+    // 6) seed users using app service
     await AuthService.register({
       name: 'John Tan',
       email: 'john@example.com',
@@ -120,7 +127,7 @@ async function runSetup() {
     console.log('Setup completed successfully.');
   } catch (error) {
     try {
-      await connection.end();
+      await rootConnection.end();
     } catch {
       // ignore
     }
