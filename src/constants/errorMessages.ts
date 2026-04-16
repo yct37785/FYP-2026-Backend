@@ -12,6 +12,12 @@ export const ERR_MSGS = {
     ACCOUNT_SUSPENDED: 'Account is suspended',
     ACCOUNT_DEACTIVATED: 'Account is deactivated',
   },
+  USER_CATEGORY: {
+    CATEGORY_ID_REQUIRED: 'Valid category id is required',
+    CATEGORY_NOT_FOUND: 'Category not found',
+    USER_CATEGORY_ALREADY_EXISTS: 'Category already added to user preferences',
+    USER_CATEGORY_NOT_FOUND: 'User category preference not found',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',

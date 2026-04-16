@@ -10,20 +10,27 @@ export const errorHandler = (
   console.error(err);
 
   if (err instanceof Error) {
-    const authErrors = new Set<string>([
+    const badRequestErrors = new Set<string>([
       ERR_MSGS.AUTH.EMAIL_ALREADY_REGISTERED,
       ERR_MSGS.AUTH.INVALID_EMAIL_OR_PASSWORD,
       ERR_MSGS.AUTH.ACCOUNT_SUSPENDED,
       ERR_MSGS.AUTH.ACCOUNT_DEACTIVATED,
+      ERR_MSGS.USER_CATEGORY.USER_CATEGORY_ALREADY_EXISTS,
     ]);
 
-    if (authErrors.has(err.message)) {
+    if (badRequestErrors.has(err.message)) {
       return res.status(400).json({
         error: err.message,
       });
     }
 
-    if (err.message === ERR_MSGS.AUTH.USER_NOT_FOUND) {
+    const notFoundErrors = new Set<string>([
+      ERR_MSGS.AUTH.USER_NOT_FOUND,
+      ERR_MSGS.USER_CATEGORY.CATEGORY_NOT_FOUND,
+      ERR_MSGS.USER_CATEGORY.USER_CATEGORY_NOT_FOUND,
+    ]);
+
+    if (notFoundErrors.has(err.message)) {
       return res.status(404).json({
         error: err.message,
       });

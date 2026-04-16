@@ -34,6 +34,25 @@ async function runSetup() {
   `,
 
     `
+  CREATE TABLE user_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category_id INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user_categories_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_user_categories_category
+      FOREIGN KEY (category_id) REFERENCES category(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT uq_user_category UNIQUE (user_id, category_id)
+  )
+  `,
+
+    `
   CREATE TABLE events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     owner_id INT NOT NULL,
@@ -71,30 +90,32 @@ async function runSetup() {
   try {
     console.log(`Resetting database: ${env.dbName}`);
 
+    // TODO: drop and create schema first before anything else
+
     await Db.closePool();
 
     for (const statement of schemaStatements) {
       await connection.query(statement);
     }
 
-    await connection.end();
-
-    await Db.resetPool();
-
-    // seed users
-    await AuthService.register({
-      name: 'John Tan',
-      email: 'john@example.com',
-      password: 'password123',
-    });
-
-    // seed categories
+    // seed categories using root connection
     for (const categoryName of categoryNames) {
       await connection.execute(
         `INSERT INTO category (name) VALUES (?)`,
         [categoryName]
       );
     }
+
+    await connection.end();
+
+    await Db.resetPool();
+
+    // seed users using app service
+    await AuthService.register({
+      name: 'John Tan',
+      email: 'john@example.com',
+      password: 'password123',
+    });
 
     console.log('Setup completed successfully.');
   } catch (error) {

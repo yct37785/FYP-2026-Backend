@@ -1,5 +1,6 @@
 import express from 'express';
 import authRoutes from '@routes/authRoutes';
+import userCategoryRoutes from '@routes/userCategoryRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { env } from '@config/env';
@@ -13,6 +14,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userCategoryRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
