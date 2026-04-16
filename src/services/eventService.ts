@@ -260,4 +260,45 @@ export class EventService {
 
     return rows.map(mapEventRow);
   }
+
+  static async getEventById(eventId: number): Promise<EventItem> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<EventRow[]>(
+      `
+      SELECT
+        e.id,
+        e.owner_id,
+        e.title,
+        e.description,
+        e.banner_url,
+        e.category_id,
+        c.name AS category_name,
+        e.venue,
+        e.address,
+        e.city,
+        e.starts_at,
+        e.ends_at,
+        e.price,
+        e.source,
+        e.source_name,
+        e.external_event_id,
+        e.is_suspended,
+        e.created_at,
+        e.updated_at
+      FROM event e
+      INNER JOIN category c ON c.id = e.category_id
+      WHERE e.id = ?
+        AND e.is_suspended = false
+      LIMIT 1
+      `,
+      [eventId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_FOUND);
+    }
+
+    return mapEventRow(rows[0]);
+  }
 }

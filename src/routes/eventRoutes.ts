@@ -60,6 +60,24 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+router.get('/:id', async (req, res, next) => {
+  try {
+    const eventId = Number(req.params.id);
+
+    if (Number.isNaN(eventId)) {
+      return res.status(400).json({
+        error: ERR_MSGS.EVENT.INVALID_INPUT,
+      });
+    }
+
+    const item = await EventService.getEventById(eventId);
+
+    return res.status(200).json(item);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post(
   '/',
   authMiddleware,
