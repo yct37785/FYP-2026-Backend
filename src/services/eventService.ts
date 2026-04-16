@@ -30,20 +30,10 @@ interface GetEventsInput {
   keyword?: string;
 }
 
-interface UpdateEventInput {
+type UpdateEventInput = {
   eventId: number;
   ownerId: number;
-  title: string;
-  description: string;
-  bannerUrl?: string | null;
-  categoryId: number;
-  venue: string;
-  address: string;
-  city: string;
-  startsAt: Date;
-  endsAt: Date;
-  price: number;
-}
+} & Partial<Omit<CreateEventInput, 'ownerId'>>;
 
 interface CategoryRow extends RowDataPacket {
   id: number;
@@ -387,6 +377,8 @@ export class EventService {
       throw new Error(ERR_MSGS.EVENT.EVENT_NOT_OWNER);
     }
 
+    const nextCategoryId = data.categoryId ?? event.category_id;
+
     const [categoryRows] = await pool.execute<CategoryRow[]>(
       `
       SELECT id, name
@@ -394,11 +386,26 @@ export class EventService {
       WHERE id = ?
       LIMIT 1
       `,
-      [data.categoryId]
+      [nextCategoryId]
     );
 
     if (categoryRows.length === 0) {
       throw new Error(ERR_MSGS.EVENT.CATEGORY_NOT_FOUND);
+    }
+
+    const nextTitle = data.title ?? event.title;
+    const nextDescription = data.description ?? event.description;
+    const nextBannerUrl =
+      data.bannerUrl !== undefined ? data.bannerUrl : event.banner_url;
+    const nextVenue = data.venue ?? event.venue;
+    const nextAddress = data.address ?? event.address;
+    const nextCity = data.city ?? event.city;
+    const nextStartsAt = data.startsAt ?? event.starts_at;
+    const nextEndsAt = data.endsAt ?? event.ends_at;
+    const nextPrice = data.price ?? Number(event.price);
+
+    if (nextEndsAt <= nextStartsAt) {
+      throw new Error(ERR_MSGS.EVENT.INVALID_INPUT);
     }
 
     await pool.execute(
@@ -418,16 +425,16 @@ export class EventService {
       WHERE id = ?
       `,
       [
-        data.title,
-        data.description,
-        data.bannerUrl ?? null,
-        data.categoryId,
-        data.venue,
-        data.address,
-        data.city,
-        data.startsAt,
-        data.endsAt,
-        data.price,
+        nextTitle,
+        nextDescription,
+        nextBannerUrl,
+        nextCategoryId,
+        nextVenue,
+        nextAddress,
+        nextCity,
+        nextStartsAt,
+        nextEndsAt,
+        nextPrice,
         data.eventId,
       ]
     );

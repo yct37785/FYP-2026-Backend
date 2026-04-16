@@ -193,6 +193,12 @@ router.put(
 
       const eventId = Number(req.params.id);
 
+      if (Number.isNaN(eventId)) {
+        return res.status(400).json({
+          error: ERR_MSGS.EVENT.INVALID_INPUT,
+        });
+      }
+
       const {
         title,
         description,
@@ -206,24 +212,41 @@ router.put(
         price,
       } = req.body;
 
-      const parsedCategoryId = Number(categoryId);
-      const startsAtDate = new Date(startsAt);
-      const endsAtDate = new Date(endsAt);
-      const parsedPrice = Number(price);
+      const parsedCategoryId =
+        categoryId !== undefined ? Number(categoryId) : undefined;
+
+      const startsAtDate =
+        startsAt !== undefined ? new Date(startsAt) : undefined;
+
+      const endsAtDate =
+        endsAt !== undefined ? new Date(endsAt) : undefined;
+
+      const parsedPrice =
+        price !== undefined ? Number(price) : undefined;
 
       if (
-        Number.isNaN(eventId) ||
-        !title ||
-        !description ||
-        Number.isNaN(parsedCategoryId) ||
-        !venue ||
-        !address ||
-        !city ||
-        Number.isNaN(startsAtDate.getTime()) ||
-        Number.isNaN(endsAtDate.getTime()) ||
-        endsAtDate <= startsAtDate ||
-        Number.isNaN(parsedPrice) ||
-        parsedPrice < 0
+        (title !== undefined && !title) ||
+        (description !== undefined && !description) ||
+        (categoryId !== undefined && Number.isNaN(parsedCategoryId)) ||
+        (venue !== undefined && !venue) ||
+        (address !== undefined && !address) ||
+        (city !== undefined && !city) ||
+        (startsAt !== undefined &&
+          (!startsAtDate || Number.isNaN(startsAtDate.getTime()))) ||
+        (endsAt !== undefined &&
+          (!endsAtDate || Number.isNaN(endsAtDate.getTime()))) ||
+        (parsedPrice !== undefined &&
+          (Number.isNaN(parsedPrice) || parsedPrice < 0))
+      ) {
+        return res.status(400).json({
+          error: ERR_MSGS.EVENT.INVALID_INPUT,
+        });
+      }
+
+      if (
+        startsAtDate &&
+        endsAtDate &&
+        endsAtDate <= startsAtDate
       ) {
         return res.status(400).json({
           error: ERR_MSGS.EVENT.INVALID_INPUT,
@@ -233,16 +256,16 @@ router.put(
       const result = await EventService.updateMyEvent({
         eventId,
         ownerId: req.user.userId,
-        title,
-        description,
-        bannerUrl: bannerUrl ?? null,
-        categoryId: parsedCategoryId,
-        venue,
-        address,
-        city,
-        startsAt: startsAtDate,
-        endsAt: endsAtDate,
-        price: parsedPrice,
+        ...(title !== undefined ? { title } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(bannerUrl !== undefined ? { bannerUrl } : {}),
+        ...(parsedCategoryId !== undefined ? { categoryId: parsedCategoryId } : {}),
+        ...(venue !== undefined ? { venue } : {}),
+        ...(address !== undefined ? { address } : {}),
+        ...(city !== undefined ? { city } : {}),
+        ...(startsAtDate !== undefined ? { startsAt: startsAtDate } : {}),
+        ...(endsAtDate !== undefined ? { endsAt: endsAtDate } : {}),
+        ...(parsedPrice !== undefined ? { price: parsedPrice } : {}),
       });
 
       return res.status(200).json(result);
