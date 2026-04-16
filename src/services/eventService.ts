@@ -18,6 +18,8 @@ interface CreateEventInput {
 }
 
 interface GetEventsInput {
+  ownerId?: number;
+  includeSuspended?: boolean;
   categoryId?: number;
   city?: string;
   venue?: string;
@@ -160,11 +162,20 @@ export class EventService {
     return mapEventRow(rows[0]);
   }
 
-  static async getEvents(filters: GetEventsInput): Promise<EventItem[]> {
+    static async getEvents(filters: GetEventsInput): Promise<EventItem[]> {
     const pool = Db.getPool();
 
-    const conditions: string[] = ['e.is_suspended = false'];
+    const conditions: string[] = [];
     const values: Array<string | number | Date> = [];
+
+    if (!filters.includeSuspended) {
+      conditions.push('e.is_suspended = false');
+    }
+
+    if (filters.ownerId !== undefined) {
+      conditions.push('e.owner_id = ?');
+      values.push(filters.ownerId);
+    }
 
     if (filters.categoryId !== undefined) {
       conditions.push('e.category_id = ?');
@@ -224,9 +235,8 @@ export class EventService {
       );
     }
 
-    const whereClause = conditions.length > 0
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const [rows] = await pool.execute<EventRow[]>(
       `
@@ -261,8 +271,26 @@ export class EventService {
     return rows.map(mapEventRow);
   }
 
-  static async getEventById(eventId: number): Promise<EventItem> {
+    static async getEventById(
+    eventId: number,
+    options?: {
+      ownerId?: number;
+      includeSuspended?: boolean;
+    }
+  ): Promise<EventItem> {
     const pool = Db.getPool();
+
+    const conditions: string[] = ['e.id = ?'];
+    const values: Array<number> = [eventId];
+
+    if (!options?.includeSuspended) {
+      conditions.push('e.is_suspended = false');
+    }
+
+    if (options?.ownerId !== undefined) {
+      conditions.push('e.owner_id = ?');
+      values.push(options.ownerId);
+    }
 
     const [rows] = await pool.execute<EventRow[]>(
       `
@@ -288,11 +316,10 @@ export class EventService {
         e.updated_at
       FROM event e
       INNER JOIN category c ON c.id = e.category_id
-      WHERE e.id = ?
-        AND e.is_suspended = false
+      WHERE ${conditions.join(' AND ')}
       LIMIT 1
       `,
-      [eventId]
+      values
     );
 
     if (rows.length === 0) {
