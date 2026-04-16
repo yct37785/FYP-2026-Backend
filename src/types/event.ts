@@ -1,4 +1,5 @@
-import { EventSource, EventStatus } from '@const/event';
+export type EventSource = 'INTERNAL' | 'EXTERNAL';
+export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'SUSPENDED';
 
 export interface EventItem {
   id: number;

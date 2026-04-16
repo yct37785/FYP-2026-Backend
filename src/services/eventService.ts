@@ -1,7 +1,6 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
-import type { CreateEventInput, EventItem } from '@mytypes/event';
-import { EventSource, EventStatus } from '@const/event';
+import type { EventSource, EventStatus, CreateEventInput, EventItem } from '@mytypes/event';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 interface CategoryRow extends RowDataPacket {
