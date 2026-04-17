@@ -127,7 +127,7 @@ async function runSetup() {
       INSERT INTO booking (user_id, event_id, credits_spent)
       VALUES (?, ?, ?)
       `,
-      [2, 1, 0]
+      [2, 1, 15]
     );
 
     console.log('----------------------------------------');

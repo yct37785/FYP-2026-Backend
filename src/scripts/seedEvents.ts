@@ -101,7 +101,7 @@ export const generateSeedEvents = (
     city: 'Singapore',
     startsAt: firstStartsAt,
     endsAt: firstEndsAt,
-    price: 0,
+    price: 15,
     pax: 1,
     source: 'INTERNAL',
   });
