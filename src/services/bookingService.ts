@@ -146,6 +146,7 @@ export class BookingService {
     );
 
     await NotificationService.createNotification(
+      connection,
       promotedUserId,
       NOTIFICATION_MSGS.BOOKING.PROMOTED_FROM_WAITLIST(eventTitle)
     );
@@ -284,6 +285,7 @@ export class BookingService {
       );
 
       await NotificationService.createNotification(
+        connection,
         userId,
         NOTIFICATION_MSGS.BOOKING.CONFIRMED(event.title)
       );

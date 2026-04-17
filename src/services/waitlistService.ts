@@ -160,6 +160,7 @@ export class WaitlistService {
     );
 
     await NotificationService.createNotification(
+      pool,
       userId,
       NOTIFICATION_MSGS.WAITLIST.JOINED(event.title)
     );

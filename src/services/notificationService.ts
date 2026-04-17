@@ -1,7 +1,7 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
 import type { NotificationItem } from '@mytypes/notification';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket, Pool, PoolConnection } from 'mysql2/promise';
 
 interface NotificationRow extends RowDataPacket {
   id: number;
@@ -15,6 +15,8 @@ interface ExistingNotificationRow extends RowDataPacket {
   id: number;
 }
 
+type DbExecutor = Pool | PoolConnection;
+
 const mapNotificationRow = (row: NotificationRow): NotificationItem => ({
   id: row.id,
   userId: row.user_id,
@@ -25,12 +27,13 @@ const mapNotificationRow = (row: NotificationRow): NotificationItem => ({
 
 export class NotificationService {
   static async createNotification(
+    executor: DbExecutor,
     userId: number,
     message: string
   ): Promise<NotificationItem> {
-    const pool = Db.getPool();
+    const db = executor ?? Db.getPool();
 
-    const [result] = await pool.execute<ResultSetHeader>(
+    const [result] = await db.execute<ResultSetHeader>(
       `
       INSERT INTO notification (user_id, message)
       VALUES (?, ?)
@@ -38,7 +41,7 @@ export class NotificationService {
       [userId, message]
     );
 
-    const [rows] = await pool.execute<NotificationRow[]>(
+    const [rows] = await db.execute<NotificationRow[]>(
       `
       SELECT
         id,

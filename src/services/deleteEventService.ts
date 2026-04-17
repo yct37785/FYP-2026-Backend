@@ -77,6 +77,7 @@ export class DeleteEventService {
         }
 
         await NotificationService.createNotification(
+          connection,
           booking.user_id,
           NOTIFICATION_MSGS.BOOKING.CANCELLED_REFUNDED(eventTitle, creditsSpent)
         );
@@ -103,6 +104,7 @@ export class DeleteEventService {
 
       for (const waitlist of waitlistRows) {
         await NotificationService.createNotification(
+          connection,
           waitlist.user_id,
           NOTIFICATION_MSGS.WAITLIST.REMOVED(eventTitle)
         );
