@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from '@routes/authRoutes';
 import meRoutes from '@routes/meRoutes';
 import eventRoutes from '@routes/eventRoutes';
+import notificationRoutes from '@routes/notificationRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { env } from '@config/env';
@@ -17,6 +18,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/me', meRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

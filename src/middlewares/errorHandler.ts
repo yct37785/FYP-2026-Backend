@@ -31,6 +31,7 @@ export const errorHandler = (
       ERR_MSGS.REVIEW.EXTERNAL_EVENT_NOT_REVIEWABLE,
       ERR_MSGS.REPORT.INVALID_INPUT,
       ERR_MSGS.REPORT.ALREADY_REPORTED,
+      ERR_MSGS.NOTIFICATION.INVALID_INPUT,
     ]);
 
     if (badRequestErrors.has(err.message)) {
@@ -61,6 +62,7 @@ export const errorHandler = (
       ERR_MSGS.FAVORITE.FAVORITE_NOT_FOUND,
       ERR_MSGS.REVIEW.REVIEW_NOT_FOUND,
       ERR_MSGS.REPORT.REPORT_NOT_FOUND,
+      ERR_MSGS.NOTIFICATION.NOTIFICATION_NOT_FOUND,
     ]);
 
     if (notFoundErrors.has(err.message)) {

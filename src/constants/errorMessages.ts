@@ -55,6 +55,10 @@ export const ERR_MSGS = {
     REPORT_NOT_FOUND: 'Report not found',
     ALREADY_REPORTED: 'You have already reported this item',
   },
+  NOTIFICATION: {
+    INVALID_INPUT: 'Invalid input',
+    NOTIFICATION_NOT_FOUND: 'Notification not found',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',

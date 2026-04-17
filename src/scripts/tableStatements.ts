@@ -196,4 +196,18 @@ export const tableStatements: string[] = [
     CONSTRAINT uq_report_user_review UNIQUE (user_id, review_id)
   )
   `,
+
+  `
+  CREATE TABLE notification (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_notification_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE
+  )
+  `,
 ];
