@@ -3,6 +3,7 @@ import { authMiddleware } from '@middlewares/authMiddleware';
 import { roleMiddleware } from '@middlewares/roleMiddleware';
 import { ERR_MSGS } from '@const/errorMessages';
 import { EventService } from '@services/eventService';
+import { DeleteEventService } from '@services/deleteEventService';
 import { EventOrganizerService } from '@services/eventOrganizerService';
 
 const router = Router();
@@ -371,7 +372,7 @@ router.delete(
         });
       }
 
-      await EventService.deleteMyEvent(eventId, req.user.userId);
+      await DeleteEventService.deleteMyEvent(eventId, req.user.userId);
 
       return res.status(200).json({
         message: 'Event deleted successfully',
