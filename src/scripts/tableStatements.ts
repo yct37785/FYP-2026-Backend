@@ -66,6 +66,7 @@ export const tableStatements: string[] = [
     source ENUM('INTERNAL', 'EXTERNAL') NOT NULL DEFAULT 'INTERNAL',
     source_name VARCHAR(191) NULL,
     external_event_id VARCHAR(191) NULL,
+    external_url VARCHAR(500) NULL,
     is_suspended BOOLEAN NOT NULL DEFAULT false,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

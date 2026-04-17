@@ -19,6 +19,7 @@ export interface EventItem {
   source: EventSource;
   sourceName: string | null;
   externalEventId: string | null;
+  externalUrl: string | null;
   isSuspended: boolean;
   createdAt: Date;
   updatedAt: Date;

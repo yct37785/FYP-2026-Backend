@@ -60,6 +60,7 @@ interface EventRow extends RowDataPacket {
   source: EventSource;
   source_name: string | null;
   external_event_id: string | null;
+  external_url: string | null;
   is_suspended: number;
   created_at: Date;
   updated_at: Date;
@@ -84,6 +85,7 @@ const mapEventRow = (row: EventRow): EventItem => ({
   source: row.source,
   sourceName: row.source_name,
   externalEventId: row.external_event_id,
+  externalUrl: row.external_url,
   isSuspended: Boolean(row.is_suspended),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -162,6 +164,7 @@ export class EventService {
         e.source,
         e.source_name,
         e.external_event_id,
+        e.external_url,
         e.is_suspended,
         e.created_at,
         e.updated_at
@@ -276,6 +279,7 @@ export class EventService {
         e.source,
         e.source_name,
         e.external_event_id,
+        e.external_url,
         e.is_suspended,
         e.created_at,
         e.updated_at
@@ -333,6 +337,7 @@ export class EventService {
         e.source,
         e.source_name,
         e.external_event_id,
+        e.external_url,
         e.is_suspended,
         e.created_at,
         e.updated_at
@@ -376,6 +381,7 @@ export class EventService {
         e.source,
         e.source_name,
         e.external_event_id,
+        e.external_url,
         e.is_suspended,
         e.created_at,
         e.updated_at
@@ -484,6 +490,7 @@ export class EventService {
         e.source,
         e.source_name,
         e.external_event_id,
+        e.external_url,
         e.is_suspended,
         e.created_at,
         e.updated_at
