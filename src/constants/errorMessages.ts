@@ -42,6 +42,14 @@ export const ERR_MSGS = {
     FAVORITE_NOT_FOUND: 'Favorite not found',
     EVENT_SUSPENDED: 'Event is suspended',
   },
+  REVIEW: {
+    INVALID_INPUT: 'Invalid input',
+    ALREADY_REVIEWED: 'You have already reviewed this event',
+    REVIEW_NOT_FOUND: 'Review not found',
+    BOOKING_REQUIRED: 'You must have a booking for this event to review it',
+    EVENT_NOT_ENDED: 'Event has not ended yet',
+    EXTERNAL_EVENT_NOT_REVIEWABLE: 'External events cannot be reviewed',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',

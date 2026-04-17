@@ -144,4 +144,27 @@ export const tableStatements: string[] = [
     CONSTRAINT uq_favorite_user_event UNIQUE (user_id, event_id)
   )
   `,
+
+  `
+  CREATE TABLE review (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    event_id INT NOT NULL,
+    rating INT NOT NULL,
+    comment TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_review_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_review_event
+      FOREIGN KEY (event_id) REFERENCES event(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT uq_review_user_event UNIQUE (user_id, event_id),
+    CONSTRAINT chk_review_rating CHECK (rating >= 1 AND rating <= 5)
+  )
+  `,
 ];
