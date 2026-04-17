@@ -31,7 +31,7 @@ export class NotificationService {
     userId: number,
     message: string
   ): Promise<NotificationItem> {
-    const db = executor ?? Db.getPool();
+    const db = executor;
 
     const [result] = await db.execute<ResultSetHeader>(
       `

@@ -18,6 +18,7 @@ export const ERR_MSGS = {
     CATEGORY_NOT_FOUND: 'Category not found',
     CATEGORY_ALREADY_EXISTS: 'Category already added to user preferences',
     CATEGORY_PREFERENCE_NOT_FOUND: 'User category preference not found',
+    INVALID_PROFILE_INPUT: 'Invalid profile input',
   },
   EVENT: {
     INVALID_INPUT: 'Invalid input',

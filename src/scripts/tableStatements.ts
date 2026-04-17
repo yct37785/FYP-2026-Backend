@@ -15,6 +15,10 @@ export const tableStatements: string[] = [
     role ENUM('user', 'organizer', 'admin') NOT NULL DEFAULT 'user',
     status ENUM('active', 'suspended', 'deactivated') NOT NULL DEFAULT 'active',
     credits DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    profile_pic_url VARCHAR(500) NULL,
+    description TEXT NULL,
+    gender ENUM('male', 'female', 'other', 'prefer_not_to_say') NULL,
+    age INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )

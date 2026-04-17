@@ -1,7 +1,14 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
-import type { MeCategoryItem } from '@mytypes/me';
+import type {
+  MeCategoryItem,
+  UpdateMyProfileInput,
+  UserGender,
+  UserProfile,
+  UserRole,
+  UserStatus,
+} from '@mytypes/user';
 
 interface CategoryRow extends RowDataPacket {
   id: number;
@@ -15,7 +22,159 @@ interface MeCategoryRow extends RowDataPacket {
   created_at: Date;
 }
 
+interface MeProfileRow extends RowDataPacket {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  credits: number;
+  profile_pic_url: string | null;
+  description: string | null;
+  gender: UserGender | null;
+  age: number | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const mapProfileRow = (row: MeProfileRow): UserProfile => ({
+  id: row.id,
+  name: row.name,
+  email: row.email,
+  role: row.role,
+  status: row.status,
+  credits: Number(row.credits),
+  profilePicUrl: row.profile_pic_url,
+  description: row.description,
+  gender: row.gender,
+  age: row.age,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
 export class MeService {
+  static async getMyProfile(userId: number): Promise<UserProfile> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<MeProfileRow[]>(
+      `
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        status,
+        credits,
+        profile_pic_url,
+        description,
+        gender,
+        age,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(ERR_MSGS.AUTH.USER_NOT_FOUND);
+    }
+
+    return mapProfileRow(rows[0]);
+  }
+
+  static async updateMyProfile(
+    userId: number,
+    data: UpdateMyProfileInput
+  ): Promise<UserProfile> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<MeProfileRow[]>(
+      `
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        status,
+        credits,
+        profile_pic_url,
+        description,
+        gender,
+        age,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(ERR_MSGS.AUTH.USER_NOT_FOUND);
+    }
+
+    const user = rows[0];
+
+    const nextName = data.name ?? user.name;
+    const nextProfilePicUrl =
+      data.profilePicUrl !== undefined ? data.profilePicUrl : user.profile_pic_url;
+    const nextDescription =
+      data.description !== undefined ? data.description : user.description;
+    const nextGender =
+      data.gender !== undefined ? data.gender : user.gender;
+    const nextAge =
+      data.age !== undefined ? data.age : user.age;
+
+    await pool.execute<ResultSetHeader>(
+      `
+      UPDATE users
+      SET
+        name = ?,
+        profile_pic_url = ?,
+        description = ?,
+        gender = ?,
+        age = ?
+      WHERE id = ?
+      `,
+      [
+        nextName,
+        nextProfilePicUrl,
+        nextDescription,
+        nextGender,
+        nextAge,
+        userId,
+      ]
+    );
+
+    const [updatedRows] = await pool.execute<MeProfileRow[]>(
+      `
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        status,
+        credits,
+        profile_pic_url,
+        description,
+        gender,
+        age,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+    return mapProfileRow(updatedRows[0]);
+  }
+
   static async getMyCategories(userId: number): Promise<MeCategoryItem[]> {
     const pool = Db.getPool();
 

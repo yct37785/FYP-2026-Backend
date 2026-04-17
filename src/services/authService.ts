@@ -119,32 +119,4 @@ export class AuthService {
       },
     };
   }
-
-  static async getCurrentUser(userId: number) {
-    const pool = Db.getPool();
-
-    const [rows] = await pool.execute<UserRow[]>(
-      `
-      SELECT id, name, email, password_hash, role, status
-      FROM users
-      WHERE id = ?
-      LIMIT 1
-      `,
-      [userId]
-    );
-
-    if (rows.length === 0) {
-      throw new Error(ERR_MSGS.AUTH.USER_NOT_FOUND);
-    }
-
-    const user = rows[0];
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      status: user.status,
-      role: user.role,
-    };
-  }
 }
