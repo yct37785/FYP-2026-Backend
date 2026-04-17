@@ -84,12 +84,10 @@ export const generateSeedEvents = (
   const events: SeedEvent[] = [];
   const now = new Date();
 
+  // push a harcoded event with 1 pax to test waitlist
   const firstStartsAt = addDays(now, 7);
   firstStartsAt.setUTCHours(19, 0, 0, 0);
-
   const firstEndsAt = addHours(firstStartsAt, 2);
-
-  // push a harcoded event with 1 pax to test waitlist
   events.push({
     ownerId,
     title: 'One Pax Test Event',
@@ -103,6 +101,26 @@ export const generateSeedEvents = (
     endsAt: firstEndsAt,
     price: 15,
     pax: 1,
+    source: 'INTERNAL',
+  });
+
+  // push a hardcoded event that is already past
+  const pastStartsAt = addDays(now, -14);
+  pastStartsAt.setUTCHours(19, 0, 0, 0);
+  const pastEndsAt = addHours(pastStartsAt, 2);
+  events.push({
+    ownerId,
+    title: 'Past Event',
+    description: 'Seeded past event for review testing.',
+    bannerUrl: 'https://example.com/banner-1.jpg',
+    categoryId: 1,
+    venue: 'SIM Campus Hall',
+    address: '461 Clementi Road',
+    city: 'Singapore',
+    startsAt: pastStartsAt,
+    endsAt: pastEndsAt,
+    price: 0,
+    pax: 50,
     source: 'INTERNAL',
   });
 

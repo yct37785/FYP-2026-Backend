@@ -121,7 +121,7 @@ async function runSetup() {
     console.log('----------------------------------------');
     console.log(`Seeded ${seedEvents.length} events for owner_id=3`);
 
-    // 8) seed one confirmed booking for the first event
+    // 8) seed one confirmed booking for the hard coded events
     await pool.execute(
       `
       INSERT INTO booking (user_id, event_id, credits_spent)
@@ -129,9 +129,16 @@ async function runSetup() {
       `,
       [2, 1, 15]
     );
+    await pool.execute(
+      `
+      INSERT INTO booking (user_id, event_id, credits_spent)
+      VALUES (?, ?, ?)
+      `,
+      [1, 1, 0]
+    );
 
     console.log('----------------------------------------');
-    console.log('Seeded booking: user_id=2 booked event_id=1');
+    console.log('Seeded bookings.');
 
     console.log('----------------------------------------');
     console.log('Setup completed successfully.');
