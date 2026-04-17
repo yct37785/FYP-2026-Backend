@@ -1,6 +1,6 @@
 import express from 'express';
 import authRoutes from '@routes/authRoutes';
-import meRoutes from '@routes/meRoutes';
+import userRoutes from '@routes/userRoutes';
 import eventRoutes from '@routes/eventRoutes';
 import bookingRoutes from '@routes/bookingRoutes';
 import waitlistRoutes from '@routes/waitlistRoutes';
@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/me', meRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/waitlists', waitlistRoutes);

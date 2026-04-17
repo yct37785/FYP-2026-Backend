@@ -52,7 +52,7 @@ const mapProfileRow = (row: MeProfileRow): UserProfile => ({
   updatedAt: row.updated_at,
 });
 
-export class MeService {
+export class UserService {
   static async getMyProfile(userId: number): Promise<UserProfile> {
     const pool = Db.getPool();
 

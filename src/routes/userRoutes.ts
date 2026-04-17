@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '@middlewares/authMiddleware';
-import { MeService } from '@services/meService';
+import { UserService } from '@services/userService';
 import { ERR_MSGS } from '@const/errorMessages';
 
 const router = Router();
@@ -13,7 +13,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
       });
     }
 
-    const item = await MeService.getMyProfile(req.user.userId);
+    const item = await UserService.getMyProfile(req.user.userId);
 
     return res.status(200).json(item);
   } catch (error) {
@@ -64,7 +64,7 @@ router.put('/', authMiddleware, async (req, res, next) => {
       });
     }
 
-    const result = await MeService.updateMyProfile(req.user.userId, {
+    const result = await UserService.updateMyProfile(req.user.userId, {
       ...(name !== undefined ? { name: String(name).trim() } : {}),
       ...(profilePicUrl !== undefined ? { profilePicUrl } : {}),
       ...(description !== undefined ? { description } : {}),
@@ -86,7 +86,7 @@ router.get('/categories', authMiddleware, async (req, res, next) => {
       });
     }
 
-    const items = await MeService.getMyCategories(req.user.userId);
+    const items = await UserService.getMyCategories(req.user.userId);
 
     return res.status(200).json({
       count: items.length,
@@ -113,7 +113,7 @@ router.post('/categories', authMiddleware, async (req, res, next) => {
       });
     }
 
-    const result = await MeService.addMyCategory(req.user.userId, categoryId);
+    const result = await UserService.addMyCategory(req.user.userId, categoryId);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -137,7 +137,7 @@ router.delete('/categories/:categoryId', authMiddleware, async (req, res, next) 
       });
     }
 
-    const result = await MeService.removeMyCategory(req.user.userId, categoryId);
+    const result = await UserService.removeMyCategory(req.user.userId, categoryId);
 
     return res.status(200).json(result);
   } catch (error) {
