@@ -7,6 +7,7 @@ import waitlistRoutes from '@routes/waitlistRoutes';
 import favoriteRoutes from '@routes/favoriteRoutes';
 import reviewRoutes from '@routes/reviewRoutes';
 import reportRoutes from '@routes/reportRoutes';
+import notificationRoutes from '@routes/notificationRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { env } from '@config/env';
@@ -27,6 +28,7 @@ app.use('/api/waitlists', waitlistRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
