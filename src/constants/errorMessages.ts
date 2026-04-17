@@ -50,6 +50,11 @@ export const ERR_MSGS = {
     EVENT_NOT_ENDED: 'Event has not ended yet',
     EXTERNAL_EVENT_NOT_REVIEWABLE: 'External events cannot be reviewed',
   },
+  REPORT: {
+    INVALID_INPUT: 'Invalid input',
+    REPORT_NOT_FOUND: 'Report not found',
+    ALREADY_REPORTED: 'You have already reported this item',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',
