@@ -2,6 +2,8 @@ import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
 import type { WaitlistItem } from '@mytypes/waitlist';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { NotificationService } from '@services/notificationService';
+import { NOTIFICATION_MSGS } from '@const/notificationMessages';
 
 interface EventRow extends RowDataPacket {
   id: number;
@@ -155,6 +157,11 @@ export class WaitlistService {
       LIMIT 1
       `,
       [result.insertId]
+    );
+
+    await NotificationService.createNotification(
+      userId,
+      NOTIFICATION_MSGS.WAITLIST.JOINED(event.title)
     );
 
     return mapWaitlistRow(rows[0]);

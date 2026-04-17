@@ -1,10 +1,13 @@
 import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
 import { RowDataPacket } from 'mysql2/promise';
+import { NotificationService } from '@services/notificationService';
+import { NOTIFICATION_MSGS } from '@const/notificationMessages';
 
 interface EventOwnerRow extends RowDataPacket {
   id: number;
   owner_id: number;
+  title: string;
 }
 
 interface BookingRefundRow extends RowDataPacket {
@@ -13,13 +16,18 @@ interface BookingRefundRow extends RowDataPacket {
   credits_spent: number;
 }
 
+interface WaitlistUserRow extends RowDataPacket {
+  id: number;
+  user_id: number;
+}
+
 export class DeleteEventService {
   static async deleteMyEvent(eventId: number, ownerId: number): Promise<void> {
     const pool = Db.getPool();
 
     const [eventRows] = await pool.execute<EventOwnerRow[]>(
       `
-      SELECT id, owner_id
+      SELECT id, owner_id, title
       FROM event
       WHERE id = ?
       LIMIT 1
@@ -34,6 +42,8 @@ export class DeleteEventService {
     if (eventRows[0].owner_id !== ownerId) {
       throw new Error(ERR_MSGS.EVENT.EVENT_NOT_OWNER);
     }
+
+    const eventTitle = eventRows[0].title;
 
     const connection = await pool.getConnection();
 
@@ -65,6 +75,11 @@ export class DeleteEventService {
             [creditsSpent, booking.user_id]
           );
         }
+
+        await NotificationService.createNotification(
+          booking.user_id,
+          NOTIFICATION_MSGS.BOOKING.CANCELLED_REFUNDED(eventTitle, creditsSpent)
+        );
       }
 
       await connection.execute(
@@ -74,6 +89,24 @@ export class DeleteEventService {
         `,
         [eventId]
       );
+
+      const [waitlistRows] = await connection.execute<WaitlistUserRow[]>(
+        `
+        SELECT
+          id,
+          user_id
+        FROM waitlist
+        WHERE event_id = ?
+        `,
+        [eventId]
+      );
+
+      for (const waitlist of waitlistRows) {
+        await NotificationService.createNotification(
+          waitlist.user_id,
+          NOTIFICATION_MSGS.WAITLIST.REMOVED(eventTitle)
+        );
+      }
 
       await connection.execute(
         `

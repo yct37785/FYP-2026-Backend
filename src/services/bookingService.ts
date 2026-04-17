@@ -2,6 +2,8 @@ import { Db } from '@config/db';
 import { ERR_MSGS } from '@const/errorMessages';
 import type { BookingItem } from '@mytypes/booking';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { NotificationService } from '@services/notificationService';
+import { NOTIFICATION_MSGS } from '@const/notificationMessages';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -68,6 +70,7 @@ const mapBookingRow = (row: BookingRow): BookingItem => ({
 export class BookingService {
   private static async tryPromoteFirstWaitlistedUser(
     eventId: number,
+    eventTitle: string,
     eventPrice: number,
     connection: Awaited<ReturnType<ReturnType<typeof Db.getPool>['getConnection']>>
   ): Promise<void> {
@@ -140,6 +143,11 @@ export class BookingService {
       WHERE id = ?
       `,
       [waitlistEntry.id]
+    );
+
+    await NotificationService.createNotification(
+      promotedUserId,
+      NOTIFICATION_MSGS.BOOKING.PROMOTED_FROM_WAITLIST(eventTitle)
     );
   }
 
@@ -275,6 +283,11 @@ export class BookingService {
         [result.insertId]
       );
 
+      await NotificationService.createNotification(
+        userId,
+        NOTIFICATION_MSGS.BOOKING.CONFIRMED(event.title)
+      );
+
       return mapBookingRow(bookingRows[0]);
     } catch (error) {
       await connection.rollback();
@@ -378,6 +391,7 @@ export class BookingService {
 
     const booking = rows[0];
     const eventId = booking.event_id;
+    const eventTitle = booking.event_title;
     const eventPrice = Number(booking.event_price);
     const creditsSpent = Number(booking.credits_spent);
 
@@ -407,6 +421,7 @@ export class BookingService {
 
       await BookingService.tryPromoteFirstWaitlistedUser(
         eventId,
+        eventTitle,
         eventPrice,
         connection
       );

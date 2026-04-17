@@ -2,8 +2,8 @@ export const NOTIFICATION_MSGS = {
   BOOKING: {
     CONFIRMED: (eventTitle: string) =>
       `Your booking for "${eventTitle}" is confirmed.`,
-    CANCELLED_REFUNDED: (eventTitle: string) =>
-      `Your booking for "${eventTitle}" has been cancelled and you have been refunded the full amount.`,
+    CANCELLED_REFUNDED: (eventTitle: string, refundAmount: number) =>
+      `Your booking for "${eventTitle}" has been cancelled and you have been refunded the full amount of $${refundAmount.toFixed(2)}.`,
     PROMOTED_FROM_WAITLIST: (eventTitle: string) =>
       `You have been promoted from the waitlist to a confirmed booking for "${eventTitle}".`,
   },
