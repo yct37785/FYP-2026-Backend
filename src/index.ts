@@ -11,8 +11,16 @@ import notificationRoutes from '@routes/notificationRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { env } from '@config/env';
+import cors from 'cors';
 
 const app = express();
+
+app.use(
+  cors({
+    origin: '*',
+    credentials: false,
+  })
+);
 
 app.use(express.json());
 
