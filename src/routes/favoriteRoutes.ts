@@ -29,6 +29,33 @@ router.post('/events/:eventId', authMiddleware, async (req, res, next) => {
   }
 });
 
+router.get('/events/:eventId/status', authMiddleware, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: ERR_MSGS.AUTH.UNAUTHORIZED,
+      });
+    }
+
+    const eventId = Number(req.params.eventId);
+
+    if (Number.isNaN(eventId)) {
+      return res.status(400).json({
+        error: ERR_MSGS.EVENT.INVALID_INPUT,
+      });
+    }
+
+    const result = await FavoriteService.getMyFavoriteStatus(
+      req.user.userId,
+      eventId
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/mine', authMiddleware, async (req, res, next) => {
   try {
     if (!req.user) {
@@ -43,33 +70,6 @@ router.get('/mine', authMiddleware, async (req, res, next) => {
       count: items.length,
       items,
     });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/mine/:id', authMiddleware, async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        error: ERR_MSGS.AUTH.UNAUTHORIZED,
-      });
-    }
-
-    const favoriteId = Number(req.params.id);
-
-    if (Number.isNaN(favoriteId)) {
-      return res.status(400).json({
-        error: ERR_MSGS.EVENT.INVALID_INPUT,
-      });
-    }
-
-    const item = await FavoriteService.getMyFavoriteById(
-      req.user.userId,
-      favoriteId
-    );
-
-    return res.status(200).json(item);
   } catch (error) {
     next(error);
   }
@@ -92,32 +92,6 @@ router.delete('/mine/:id', authMiddleware, async (req, res, next) => {
     }
 
     await FavoriteService.deleteMyFavorite(req.user.userId, favoriteId);
-
-    return res.status(200).json({
-      message: 'Favorite deleted successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete('/events/:eventId', authMiddleware, async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        error: ERR_MSGS.AUTH.UNAUTHORIZED,
-      });
-    }
-
-    const eventId = Number(req.params.eventId);
-
-    if (Number.isNaN(eventId)) {
-      return res.status(400).json({
-        error: ERR_MSGS.EVENT.INVALID_INPUT,
-      });
-    }
-
-    await FavoriteService.deleteMyFavoriteByEventId(req.user.userId, eventId);
 
     return res.status(200).json({
       message: 'Favorite deleted successfully',
