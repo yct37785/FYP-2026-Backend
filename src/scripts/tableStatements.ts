@@ -58,7 +58,7 @@ export const tableStatements: string[] = [
     owner_id INT NOT NULL,
     title VARCHAR(191) NOT NULL,
     description TEXT NOT NULL,
-    banner_url VARCHAR(255) NULL,
+    banner_url VARCHAR(500) NULL,
     category_id INT NOT NULL,
     venue VARCHAR(191) NOT NULL,
     address VARCHAR(255) NOT NULL,
