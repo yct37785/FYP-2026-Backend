@@ -22,6 +22,7 @@ interface ReviewRow extends RowDataPacket {
   user_id: number;
   user_name: string;
   event_id: number;
+  event_title: string;
   rating: number;
   comment: string;
   created_at: Date;
@@ -33,6 +34,7 @@ const mapReviewRow = (row: ReviewRow): ReviewItem => ({
   userId: row.user_id,
   userName: row.user_name,
   eventId: row.event_id,
+  eventTitle: row.event_title,
   rating: row.rating,
   comment: row.comment,
   createdAt: row.created_at,
@@ -124,12 +126,14 @@ export class ReviewService {
         r.user_id,
         u.name AS user_name,
         r.event_id,
+        e.title AS event_title,
         r.rating,
         r.comment,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
+      INNER JOIN event e ON e.id = r.event_id
       WHERE r.id = ?
       LIMIT 1
       `,
@@ -149,12 +153,14 @@ export class ReviewService {
         r.user_id,
         u.name AS user_name,
         r.event_id,
+        e.title AS event_title,
         r.rating,
         r.comment,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
+      INNER JOIN event e ON e.id = r.event_id
       WHERE r.event_id = ?
       ORDER BY r.created_at DESC, r.id DESC
       `,
@@ -174,12 +180,14 @@ export class ReviewService {
         r.user_id,
         u.name AS user_name,
         r.event_id,
+        e.title AS event_title,
         r.rating,
         r.comment,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
+      INNER JOIN event e ON e.id = r.event_id
       WHERE r.user_id = ?
       ORDER BY r.created_at DESC, r.id DESC
       `,
@@ -199,12 +207,14 @@ export class ReviewService {
         r.user_id,
         u.name AS user_name,
         r.event_id,
+        e.title AS event_title,
         r.rating,
         r.comment,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
+      INNER JOIN event e ON e.id = r.event_id
       WHERE r.id = ? AND r.user_id = ?
       LIMIT 1
       `,
@@ -233,12 +243,14 @@ export class ReviewService {
         r.user_id,
         u.name AS user_name,
         r.event_id,
+        e.title AS event_title,
         r.rating,
         r.comment,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
+      INNER JOIN event e ON e.id = r.event_id
       WHERE r.id = ? AND r.user_id = ?
       LIMIT 1
       `,
@@ -265,12 +277,14 @@ export class ReviewService {
         r.user_id,
         u.name AS user_name,
         r.event_id,
+        e.title AS event_title,
         r.rating,
         r.comment,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
+      INNER JOIN event e ON e.id = r.event_id
       WHERE r.id = ?
       LIMIT 1
       `,

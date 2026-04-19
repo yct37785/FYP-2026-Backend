@@ -3,6 +3,7 @@ export interface ReviewItem {
   userId: number;
   userName: string;
   eventId: number;
+  eventTitle: string;
   rating: number;
   comment: string;
   createdAt: Date;
