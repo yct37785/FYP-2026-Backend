@@ -82,6 +82,16 @@ function sleep(ms: number): Promise<void> {
 }
 
 export class SyncService {
+  private static getSyncIntervalMs(): number {
+    const value = Number(process.env.EVENTBRITE_SYNC_INTERVAL_MS || 60 * 60 * 1000);
+
+    if (Number.isNaN(value) || value <= 0) {
+      return 60 * 60 * 1000;
+    }
+
+    return value;
+  }
+
   private static getApiKey(): string {
     const apiKey = process.env.EVENTBRITE_API_KEY;
 
@@ -571,6 +581,19 @@ export class SyncService {
 
     if (syncRow.isRunning) {
       console.log('[sync:eventbrite] skipped because sync is already running');
+      return;
+    }
+
+    const intervalMs = SyncService.getSyncIntervalMs();
+    const now = Date.now();
+
+    if (
+      syncRow.lastRunAt &&
+      now - intervalMs < new Date(syncRow.lastRunAt).getTime()
+    ) {
+      console.log(
+        `[sync:eventbrite] already synced at ${new Date(syncRow.lastRunAt).toISOString()}`
+      );
       return;
     }
 
