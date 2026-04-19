@@ -48,7 +48,7 @@ router.get('/mine', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.get('/mine/:id', authMiddleware, async (req, res, next) => {
+router.get('/events/:eventId/status', authMiddleware, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -56,17 +56,20 @@ router.get('/mine/:id', authMiddleware, async (req, res, next) => {
       });
     }
 
-    const waitlistId = Number(req.params.id);
+    const eventId = Number(req.params.eventId);
 
-    if (Number.isNaN(waitlistId)) {
+    if (Number.isNaN(eventId)) {
       return res.status(400).json({
         error: ERR_MSGS.EVENT.INVALID_INPUT,
       });
     }
 
-    const item = await WaitlistService.getMyWaitlistById(req.user.userId, waitlistId);
+    const result = await WaitlistService.getMyWaitlistStatus(
+      req.user.userId,
+      eventId
+    );
 
-    return res.status(200).json(item);
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
