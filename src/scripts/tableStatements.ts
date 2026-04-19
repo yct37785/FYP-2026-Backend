@@ -215,4 +215,19 @@ export const tableStatements: string[] = [
       ON DELETE CASCADE
   )
   `,
+
+  `
+  CREATE TABLE sync (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    source VARCHAR(50) NOT NULL UNIQUE,
+    last_created_at DATETIME NULL,
+    last_run_at DATETIME NULL,
+    last_success_at DATETIME NULL,
+    last_error TEXT NULL,
+    total_new_events INT NOT NULL DEFAULT 0,
+    is_running BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+  `,
 ];
