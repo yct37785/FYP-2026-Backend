@@ -3,8 +3,27 @@ import { authMiddleware } from '@middlewares/authMiddleware';
 import { roleMiddleware } from '@middlewares/roleMiddleware';
 import { ERR_MSGS } from '@const/errorMessages';
 import { AdminService } from '@services/adminService';
+import { SyncLogsService } from '@services/syncLogsService';
 
 const router = Router();
+
+router.get(
+  '/sync-logs',
+  authMiddleware,
+  roleMiddleware('admin'),
+  async (_req, res, next) => {
+    try {
+      const items = await SyncLogsService.getSyncLogs();
+
+      return res.status(200).json({
+        count: items.length,
+        items,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 router.get(
   '/reports',
