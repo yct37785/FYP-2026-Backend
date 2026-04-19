@@ -1,6 +1,8 @@
 import { SyncService } from '@services/syncService';
 
-const EVENTBRITE_SYNC_INTERVAL_MS = 60_000;
+const EVENTBRITE_SYNC_INTERVAL_MS = Number(
+  process.env.EVENTBRITE_SYNC_INTERVAL_MS || 60 * 60 * 1000
+);
 
 let eventbriteSyncTimer: NodeJS.Timeout | null = null;
 let hasStarted = false;
@@ -32,4 +34,13 @@ export function startEventbriteSyncJob(): void {
   eventbriteSyncTimer = setInterval(() => {
     void runEventbriteSyncOnce();
   }, EVENTBRITE_SYNC_INTERVAL_MS);
+}
+
+export function stopEventbriteSyncJob(): void {
+  if (eventbriteSyncTimer) {
+    clearInterval(eventbriteSyncTimer);
+    eventbriteSyncTimer = null;
+  }
+
+  hasStarted = false;
 }
