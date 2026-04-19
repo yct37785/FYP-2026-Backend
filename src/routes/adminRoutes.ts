@@ -6,6 +6,24 @@ import { AdminService } from '@services/adminService';
 
 const router = Router();
 
+router.get(
+  '/reports',
+  authMiddleware,
+  roleMiddleware('admin'),
+  async (_req, res, next) => {
+    try {
+      const items = await AdminService.getAllReports();
+
+      return res.status(200).json({
+        count: items.length,
+        items,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 router.post(
   '/reports/:reportId/dismiss',
   authMiddleware,

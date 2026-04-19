@@ -3,6 +3,29 @@ import { ERR_MSGS } from '@const/errorMessages';
 import { NOTIFICATION_MSGS } from '@const/notificationMessages';
 import { NotificationService } from '@services/notificationService';
 import { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import type { ReportStatus } from '@mytypes/report';
+
+export interface AdminReportItem {
+  id: number;
+  userId: number;
+  reporterName: string;
+  reporterEmail: string;
+  eventId: number | null;
+  eventTitle: string | null;
+  reviewId: number | null;
+  reviewComment: string | null;
+  reviewRating: number | null;
+  reviewIsSuspended: boolean | null;
+  reviewAuthorId: number | null;
+  reviewAuthorName: string | null;
+  reviewEventId: number | null;
+  reviewEventTitle: string | null;
+  reason: string;
+  details: string | null;
+  status: ReportStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface ReportRow extends RowDataPacket {
   id: number;
@@ -11,7 +34,29 @@ interface ReportRow extends RowDataPacket {
   review_id: number | null;
   reason: string;
   details: string | null;
-  status: 'OPEN' | 'RESOLVED' | 'DISMISSED';
+  status: ReportStatus;
+}
+
+interface AdminReportRow extends RowDataPacket {
+  id: number;
+  user_id: number;
+  reporter_name: string;
+  reporter_email: string;
+  event_id: number | null;
+  event_title: string | null;
+  review_id: number | null;
+  review_comment: string | null;
+  review_rating: number | null;
+  review_is_suspended: number | null;
+  review_author_id: number | null;
+  review_author_name: string | null;
+  review_event_id: number | null;
+  review_event_title: string | null;
+  reason: string;
+  details: string | null;
+  status: ReportStatus;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface EventOwnerRow extends RowDataPacket {
@@ -28,6 +73,29 @@ interface ReviewOwnerRow extends RowDataPacket {
   event_title: string;
   is_suspended: number;
 }
+
+const mapAdminReportRow = (row: AdminReportRow): AdminReportItem => ({
+  id: row.id,
+  userId: row.user_id,
+  reporterName: row.reporter_name,
+  reporterEmail: row.reporter_email,
+  eventId: row.event_id,
+  eventTitle: row.event_title,
+  reviewId: row.review_id,
+  reviewComment: row.review_comment,
+  reviewRating: row.review_rating !== null ? Number(row.review_rating) : null,
+  reviewIsSuspended:
+    row.review_is_suspended !== null ? Boolean(row.review_is_suspended) : null,
+  reviewAuthorId: row.review_author_id,
+  reviewAuthorName: row.review_author_name,
+  reviewEventId: row.review_event_id,
+  reviewEventTitle: row.review_event_title,
+  reason: row.reason,
+  details: row.details,
+  status: row.status,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
 
 export class AdminService {
   private static async getOpenReportOrThrow(
@@ -62,6 +130,52 @@ export class AdminService {
     }
 
     return report;
+  }
+
+  static async getAllReports(): Promise<AdminReportItem[]> {
+    const pool = Db.getPool();
+
+    const [rows] = await pool.execute<AdminReportRow[]>(
+      `
+      SELECT
+        r.id,
+        r.user_id,
+        reporter.name AS reporter_name,
+        reporter.email AS reporter_email,
+        r.event_id,
+        event_target.title AS event_title,
+        r.review_id,
+        review_target.comment AS review_comment,
+        review_target.rating AS review_rating,
+        review_target.is_suspended AS review_is_suspended,
+        review_author.id AS review_author_id,
+        review_author.name AS review_author_name,
+        review_target.event_id AS review_event_id,
+        review_event.title AS review_event_title,
+        r.reason,
+        r.details,
+        r.status,
+        r.created_at,
+        r.updated_at
+      FROM report r
+      INNER JOIN users reporter ON reporter.id = r.user_id
+      LEFT JOIN event event_target ON event_target.id = r.event_id
+      LEFT JOIN review review_target ON review_target.id = r.review_id
+      LEFT JOIN users review_author ON review_author.id = review_target.user_id
+      LEFT JOIN event review_event ON review_event.id = review_target.event_id
+      ORDER BY
+        CASE r.status
+          WHEN 'OPEN' THEN 0
+          WHEN 'RESOLVED' THEN 1
+          WHEN 'DISMISSED' THEN 2
+          ELSE 3
+        END ASC,
+        r.created_at DESC,
+        r.id DESC
+      `
+    );
+
+    return rows.map(mapAdminReportRow);
   }
 
   static async dismissReport(reportId: number): Promise<void> {
