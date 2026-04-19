@@ -82,12 +82,6 @@ function sleep(ms: number): Promise<void> {
 }
 
 export class SyncService {
-  private static getApiBaseUrl(): string {
-    return (
-      process.env.EVENTBRITE_API_BASE_URL || 'https://www.eventbriteapi.com/v3'
-    );
-  }
-
   private static getApiKey(): string {
     const apiKey = process.env.EVENTBRITE_API_KEY;
 
@@ -216,27 +210,32 @@ export class SyncService {
     );
   }
 
-  private static async readVenueIds(): Promise<string[]> {
+  private static async readVenueRows(): Promise<
+    Array<{ venueId: string; venue: string; address: string }>
+  > {
     const filePath = path.resolve(process.cwd(), VENUES_FILE);
     const content = await fs.readFile(filePath, 'utf-8');
 
-    return Array.from(
-      new Set(
-        content
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean)
-      )
-    );
+    return content
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [venueIdRaw, venueRaw, addressRaw] = line.split('\\');
+
+        return {
+          venueId: String(venueIdRaw ?? '').trim(),
+          venue: String(venueRaw ?? '').trim(),
+          address: String(addressRaw ?? '').trim(),
+        };
+      })
+      .filter((row) => row.venueId && row.venue && row.address);
   }
 
   private static async fetchVenueEvents(venueId: string): Promise<any[]> {
-    const url = new URL(`${SyncService.getApiBaseUrl()}/venues/${venueId}/events/`);
-    url.searchParams.set('status', 'live');
-    url.searchParams.set('order_by', 'created_desc');
-    url.searchParams.set('only_public', 'true');
+    const url = `https://www.eventbriteapi.com/v3/venues/${venueId}/events/?status=live&order_by=created_desc&only_public=true`;
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${SyncService.getApiKey()}`,
@@ -254,7 +253,7 @@ export class SyncService {
     const data = await response.json();
     const events = Array.isArray(data?.events) ? data.events : [];
 
-    return events.slice(0, 10);
+    return events.slice(0, PAGE_SIZE);
   }
 
   private static async getOrCreateSyncOwnerId(): Promise<number> {
@@ -332,7 +331,9 @@ export class SyncService {
     const categoryId = categoryNameToId.get(mappedName.trim().toLowerCase());
 
     if (!categoryId) {
-      throw new Error(`Local category "${mappedName}" is not seeded in the database`);
+      throw new Error(
+        `Local category "${mappedName}" is not seeded in the database`
+      );
     }
 
     return categoryId;
@@ -367,6 +368,7 @@ export class SyncService {
     ownerId: number;
     categoryNameToId: Map<string, number>;
     lastCreatedAt: Date | null;
+    venueLookup: Map<string, { venue: string; address: string }>;
   }): {
     rows: Array<
       [
@@ -388,7 +390,6 @@ export class SyncService {
         string
       ]
     >;
-    insertedCandidatesCount: number;
     maxCreatedAtSeen: Date | null;
     skippedOldCount: number;
   } {
@@ -445,43 +446,35 @@ export class SyncService {
         'External event imported from Eventbrite.';
 
       const bannerUrl =
-        rawEvent?.logo?.url ||
-        rawEvent?.logo?.original?.url ||
-        null;
+        rawEvent?.logo?.url || rawEvent?.logo?.original?.url || null;
 
       const categoryId = SyncService.resolveCategoryId(
         rawEvent,
         params.categoryNameToId
       );
 
-      const venue = rawEvent?.online_event
-        ? 'Online Event'
-        : rawEvent?.venue_id
-        ? `Eventbrite Venue ${String(rawEvent.venue_id)}`
-        : 'Eventbrite Venue';
+      const venueId = String(rawEvent?.venue_id ?? '').trim();
+      const venueInfo = params.venueLookup.get(venueId);
 
-      const address = rawEvent?.online_event ? 'Online' : 'External venue';
+      const venue = venueInfo?.venue || `Eventbrite Venue ${venueId || 'Unknown'}`;
+      const address = venueInfo?.address || 'External venue';
       const city = DEFAULT_CITY;
 
       const startsAt = new Date(rawEvent?.start?.utc);
       const endsAt = new Date(rawEvent?.end?.utc);
 
-      if (
-        Number.isNaN(startsAt.getTime()) ||
-        Number.isNaN(endsAt.getTime())
-      ) {
+      if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
         continue;
       }
 
-      const price = rawEvent?.is_free ? 0 : 0;
+      const price = rawEvent?.is_free ? 1 : 0;
 
       const capacity =
         typeof rawEvent?.capacity === 'number'
           ? rawEvent.capacity
           : Number(rawEvent?.capacity);
 
-      const pax =
-        !Number.isNaN(capacity) && capacity > 0 ? capacity : 1;
+      const pax = !Number.isNaN(capacity) && capacity > 0 ? capacity : 1;
 
       rows.push([
         params.ownerId,
@@ -505,7 +498,6 @@ export class SyncService {
 
     return {
       rows,
-      insertedCandidatesCount: rows.length,
       maxCreatedAtSeen,
       skippedOldCount,
     };
@@ -585,19 +577,27 @@ export class SyncService {
     await SyncService.markRunStart();
 
     try {
-      const venueIds = await SyncService.readVenueIds();
+      const venueRows = await SyncService.readVenueRows();
       const ownerId = await SyncService.getOrCreateSyncOwnerId();
       const categoryNameToId = await SyncService.getCategoryNameToIdMap();
 
+      const venueLookup = new Map<string, { venue: string; address: string }>();
+      for (const row of venueRows) {
+        venueLookup.set(row.venueId, {
+          venue: row.venue,
+          address: row.address,
+        });
+      }
+
       const allRawEvents: any[] = [];
 
-      for (let index = 0; index < venueIds.length; index += 1) {
-        const venueId = venueIds[index];
-        const venueEvents = await SyncService.fetchVenueEvents(venueId);
+      for (let index = 0; index < venueRows.length; index += 1) {
+        const row = venueRows[index];
+        const venueEvents = await SyncService.fetchVenueEvents(row.venueId);
 
         allRawEvents.push(...venueEvents);
 
-        const isLast = index === venueIds.length - 1;
+        const isLast = index === venueRows.length - 1;
         if (!isLast) {
           await sleep(FETCH_DELAY_MS);
         }
@@ -608,6 +608,7 @@ export class SyncService {
         ownerId,
         categoryNameToId,
         lastCreatedAt: syncRow.lastCreatedAt,
+        venueLookup,
       });
 
       const candidateExternalIds = mapped.rows.map((row) => row[14]);
@@ -620,13 +621,10 @@ export class SyncService {
 
       const insertedCount = await SyncService.bulkInsertEvents(finalRows);
 
-      await SyncService.markSuccess(
-        mapped.maxCreatedAtSeen,
-        insertedCount
-      );
+      await SyncService.markSuccess(mapped.maxCreatedAtSeen, insertedCount);
 
       console.log(
-        `[sync:eventbrite] venues=${venueIds.length} fetched=${allRawEvents.length} inserted=${insertedCount} skippedOld=${mapped.skippedOldCount} skippedExisting=${existingExternalIds.size} lastCreatedAt=${mapped.maxCreatedAtSeen?.toISOString() ?? 'null'}`
+        `[sync:eventbrite] venues=${venueRows.length} fetched=${allRawEvents.length} inserted=${insertedCount} skippedOld=${mapped.skippedOldCount} skippedExisting=${existingExternalIds.size} lastCreatedAt=${mapped.maxCreatedAtSeen?.toISOString() ?? 'null'}`
       );
     } catch (error) {
       const message =
