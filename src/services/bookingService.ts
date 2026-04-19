@@ -5,6 +5,11 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { NotificationService } from '@services/notificationService';
 import { NOTIFICATION_MSGS } from '@const/notificationMessages';
 
+export interface BookingStatusItem {
+  isBooked: boolean;
+  bookingId: number | null;
+}
+
 interface UserRow extends RowDataPacket {
   id: number;
   credits: number;
@@ -359,6 +364,58 @@ export class BookingService {
     }
 
     return mapBookingRow(rows[0]);
+  }
+
+  static async getMyBookingStatus(
+    userId: number,
+    eventId: number
+  ): Promise<BookingStatusItem> {
+    const pool = Db.getPool();
+
+    const [eventRows] = await pool.execute<EventRow[]>(
+      `
+      SELECT
+        id,
+        title,
+        price,
+        pax,
+        is_suspended,
+        starts_at,
+        ends_at,
+        venue,
+        city
+      FROM event
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [eventId]
+    );
+
+    if (eventRows.length === 0) {
+      throw new Error(ERR_MSGS.EVENT.EVENT_NOT_FOUND);
+    }
+
+    const [rows] = await pool.execute<ExistingBookingRow[]>(
+      `
+    SELECT id
+    FROM booking
+    WHERE user_id = ? AND event_id = ?
+    LIMIT 1
+    `,
+      [userId, eventId]
+    );
+
+    if (rows.length === 0) {
+      return {
+        isBooked: false,
+        bookingId: null,
+      };
+    }
+
+    return {
+      isBooked: true,
+      bookingId: rows[0].id,
+    };
   }
 
   static async deleteMyBooking(userId: number, bookingId: number): Promise<void> {
