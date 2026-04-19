@@ -12,6 +12,7 @@ import notificationRoutes from '@routes/notificationRoutes';
 import adminRoutes from '@routes/adminRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
+import { startEventbriteSyncJob } from '@jobs/eventbriteSyncJob';
 import { env } from '@config/env';
 import cors from 'cors';
 
@@ -47,4 +48,5 @@ app.use(errorHandler);
 
 app.listen(env.port, () => {
   console.log(`Server running on http://localhost:${env.port}`);
+  startEventbriteSyncJob();
 });

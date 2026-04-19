@@ -11,6 +11,7 @@
       "@routes/*": ["./src/routes/*"],
       "@services/*": ["./src/services/*"],
       "@mytypes/*": ["./src/types/*"],
+      "@jobs/*": ["./src/jobs/*"],
       "@utils/*": ["./src/utils/*"]
     },
     "typeRoots": ["./src/types", "./node_modules/@types"],
