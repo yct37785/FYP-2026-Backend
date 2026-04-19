@@ -15,6 +15,7 @@ interface ReportRow extends RowDataPacket {
   id: number;
   user_id: number;
   event_id: number | null;
+  event_title: string | null;
   review_id: number | null;
   reason: string;
   details: string | null;
@@ -31,6 +32,7 @@ const mapReportRow = (row: ReportRow): ReportItem => ({
   id: row.id,
   userId: row.user_id,
   eventId: row.event_id,
+  eventTitle: row.event_title,
   reviewId: row.review_id,
   reason: row.reason,
   details: row.details,
@@ -38,6 +40,22 @@ const mapReportRow = (row: ReportRow): ReportItem => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
+
+const REPORT_SELECT = `
+  SELECT
+    r.id,
+    r.user_id,
+    r.event_id,
+    e.title AS event_title,
+    r.review_id,
+    r.reason,
+    r.details,
+    r.status,
+    r.created_at,
+    r.updated_at
+  FROM report r
+  LEFT JOIN event e ON e.id = r.event_id
+`;
 
 export class ReportService {
   static async createEventReport(
@@ -86,18 +104,8 @@ export class ReportService {
 
     const [rows] = await pool.execute<ReportRow[]>(
       `
-      SELECT
-        id,
-        user_id,
-        event_id,
-        review_id,
-        reason,
-        details,
-        status,
-        created_at,
-        updated_at
-      FROM report
-      WHERE id = ?
+      ${REPORT_SELECT}
+      WHERE r.id = ?
       LIMIT 1
       `,
       [result.insertId]
@@ -152,18 +160,8 @@ export class ReportService {
 
     const [rows] = await pool.execute<ReportRow[]>(
       `
-      SELECT
-        id,
-        user_id,
-        event_id,
-        review_id,
-        reason,
-        details,
-        status,
-        created_at,
-        updated_at
-      FROM report
-      WHERE id = ?
+      ${REPORT_SELECT}
+      WHERE r.id = ?
       LIMIT 1
       `,
       [result.insertId]
@@ -177,19 +175,9 @@ export class ReportService {
 
     const [rows] = await pool.execute<ReportRow[]>(
       `
-      SELECT
-        id,
-        user_id,
-        event_id,
-        review_id,
-        reason,
-        details,
-        status,
-        created_at,
-        updated_at
-      FROM report
-      WHERE user_id = ?
-      ORDER BY created_at DESC, id DESC
+      ${REPORT_SELECT}
+      WHERE r.user_id = ?
+      ORDER BY r.created_at DESC, r.id DESC
       `,
       [userId]
     );
@@ -197,23 +185,16 @@ export class ReportService {
     return rows.map(mapReportRow);
   }
 
-  static async getMyReportById(userId: number, reportId: number): Promise<ReportItem> {
+  static async getMyReportById(
+    userId: number,
+    reportId: number
+  ): Promise<ReportItem> {
     const pool = Db.getPool();
 
     const [rows] = await pool.execute<ReportRow[]>(
       `
-      SELECT
-        id,
-        user_id,
-        event_id,
-        review_id,
-        reason,
-        details,
-        status,
-        created_at,
-        updated_at
-      FROM report
-      WHERE id = ? AND user_id = ?
+      ${REPORT_SELECT}
+      WHERE r.id = ? AND r.user_id = ?
       LIMIT 1
       `,
       [reportId, userId]
@@ -259,18 +240,8 @@ export class ReportService {
 
     const [rows] = await pool.execute<ReportRow[]>(
       `
-      SELECT
-        id,
-        user_id,
-        event_id,
-        review_id,
-        reason,
-        details,
-        status,
-        created_at,
-        updated_at
-      FROM report
-      WHERE id = ?
+      ${REPORT_SELECT}
+      WHERE r.id = ?
       LIMIT 1
       `,
       [reportId]
