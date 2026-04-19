@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "setup": "tsx src/scripts/setup.ts"
+    "setup": "tsx src/scripts/setup.ts",
+    "eventbrite:venues": "tsx src/scripts/eventbriteVenues.ts"
   },
   "keywords": [],
   "author": "",

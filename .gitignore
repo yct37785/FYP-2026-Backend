@@ -142,3 +142,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# 3rd party APIs
+eventbrite_events_url.txt
+eventbrite_venues.txt
