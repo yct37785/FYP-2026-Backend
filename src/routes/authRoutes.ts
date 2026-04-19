@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/register', async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -15,7 +15,7 @@ router.post('/register', async (req, res, next) => {
       });
     }
 
-    const result = await AuthService.register({ name, email, password, role: 'user' });
+    const result = await AuthService.register({ name, email, password, role });
 
     return res.status(201).json(result);
   } catch (error) {
