@@ -235,7 +235,6 @@ export class SyncService {
     url.searchParams.set('status', 'live');
     url.searchParams.set('order_by', 'created_desc');
     url.searchParams.set('only_public', 'true');
-    url.searchParams.set('page_size', String(PAGE_SIZE));
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -253,7 +252,9 @@ export class SyncService {
     }
 
     const data = await response.json();
-    return Array.isArray(data?.events) ? data.events : [];
+    const events = Array.isArray(data?.events) ? data.events : [];
+
+    return events.slice(0, 10);
   }
 
   private static async getOrCreateSyncOwnerId(): Promise<number> {
