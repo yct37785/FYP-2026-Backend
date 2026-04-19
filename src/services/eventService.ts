@@ -57,7 +57,6 @@ interface EventRow extends RowDataPacket {
   ends_at: Date;
   price: number;
   pax: number;
-  total_bookings: number;
   source: EventSource;
   source_name: string | null;
   external_event_id: string | null;
@@ -67,7 +66,37 @@ interface EventRow extends RowDataPacket {
   updated_at: Date;
 }
 
+interface EventDetailRow extends EventRow {
+  total_bookings: number;
+}
+
 const mapEventRow = (row: EventRow): EventItem => ({
+  id: row.id,
+  ownerId: row.owner_id,
+  ownerName: row.owner_name,
+  title: row.title,
+  description: row.description,
+  bannerUrl: row.banner_url,
+  categoryId: row.category_id,
+  categoryName: row.category_name,
+  venue: row.venue,
+  address: row.address,
+  city: row.city,
+  startsAt: row.starts_at,
+  endsAt: row.ends_at,
+  price: Number(row.price),
+  pax: row.pax,
+  totalBookings: null,
+  source: row.source,
+  sourceName: row.source_name,
+  externalEventId: row.external_event_id,
+  externalUrl: row.external_url,
+  isSuspended: Boolean(row.is_suspended),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const mapEventDetailRow = (row: EventDetailRow): EventItem => ({
   id: row.id,
   ownerId: row.owner_id,
   ownerName: row.owner_name,
@@ -94,6 +123,35 @@ const mapEventRow = (row: EventRow): EventItem => ({
 });
 
 const EVENT_SELECT = `
+  SELECT
+    e.id,
+    e.owner_id,
+    u.name AS owner_name,
+    e.title,
+    e.description,
+    e.banner_url,
+    e.category_id,
+    c.name AS category_name,
+    e.venue,
+    e.address,
+    e.city,
+    e.starts_at,
+    e.ends_at,
+    e.price,
+    e.pax,
+    e.source,
+    e.source_name,
+    e.external_event_id,
+    e.external_url,
+    e.is_suspended,
+    e.created_at,
+    e.updated_at
+  FROM event e
+  INNER JOIN category c ON c.id = e.category_id
+  INNER JOIN users u ON u.id = e.owner_id
+`;
+
+const EVENT_DETAIL_SELECT = `
   SELECT
     e.id,
     e.owner_id,
@@ -303,9 +361,9 @@ export class EventService {
       values.push(options.ownerId);
     }
 
-    const [rows] = await pool.execute<EventRow[]>(
+    const [rows] = await pool.execute<EventDetailRow[]>(
       `
-      ${EVENT_SELECT}
+      ${EVENT_DETAIL_SELECT}
       WHERE ${conditions.join(' AND ')}
       LIMIT 1
       `,
@@ -316,7 +374,7 @@ export class EventService {
       throw new Error(ERR_MSGS.EVENT.EVENT_NOT_FOUND);
     }
 
-    return mapEventRow(rows[0]);
+    return mapEventDetailRow(rows[0]);
   }
 
   static async updateMyEvent(data: UpdateEventInput): Promise<EventItem> {
