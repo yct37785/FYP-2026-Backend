@@ -55,6 +55,7 @@ export const ERR_MSGS = {
     INVALID_INPUT: 'Invalid input',
     REPORT_NOT_FOUND: 'Report not found',
     ALREADY_REPORTED: 'You have already reported this item',
+    REPORT_ALREADY_PROCESSED: 'Report has already been processed',
   },
   NOTIFICATION: {
     INVALID_INPUT: 'Invalid input',
