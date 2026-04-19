@@ -11,7 +11,7 @@ function extractEventId(url: string): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
 
-  // Best match for normal Eventbrite ticket URLs:
+  // Match normal Eventbrite ticket URLs:
   // ...-tickets-1343862090689?aff=...
   const ticketsMatch = trimmed.match(/-tickets-(\d+)(?:\?|\/|$)/i);
   if (ticketsMatch?.[1]) return ticketsMatch[1];
@@ -21,9 +21,16 @@ function extractEventId(url: string): string | null {
   return allMatches.length ? allMatches[allMatches.length - 1][1] : null;
 }
 
-async function getVenueId(eventId: string, apiKey: string): Promise<string | null> {
-  const url = `https://www.eventbriteapi.com/v3/events/${eventId}/`;
+function cleanCsvValue(value: string): string {
+  // Replace line breaks and commas so the file stays simple comma-delimited
+  return value.replace(/[\r\n]+/g, " ").replace(/,/g, " ").trim();
+}
 
+function buildAddress(address1?: string | null, address2?: string | null): string {
+  return [address1?.trim(), address2?.trim()].filter(Boolean).join(" ");
+}
+
+async function fetchJson<T>(url: string, apiKey: string): Promise<T> {
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -34,13 +41,49 @@ async function getVenueId(eventId: string, apiKey: string): Promise<string | nul
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(
-      `Event ${eventId} failed: ${response.status} ${response.statusText} - ${errorText}`
-    );
+    throw new Error(`${response.status} ${response.statusText} - ${errorText}`);
   }
 
-  const data = (await response.json()) as { venue_id?: string | null };
+  return (await response.json()) as T;
+}
+
+type EventbriteEventResponse = {
+  id: string;
+  venue_id?: string | null;
+};
+
+type EventbriteVenueResponse = {
+  id: string;
+  name?: string | null;
+  address?: {
+    address_1?: string | null;
+    address_2?: string | null;
+  } | null;
+};
+
+async function getVenueIdFromEvent(eventId: string, apiKey: string): Promise<string | null> {
+  const url = `https://www.eventbriteapi.com/v3/events/${eventId}/`;
+  const data = await fetchJson<EventbriteEventResponse>(url, apiKey);
   return data.venue_id ?? null;
+}
+
+async function getVenueDetails(
+  venueId: string,
+  apiKey: string
+): Promise<{ venueId: string; name: string; address: string }> {
+  const url = `https://www.eventbriteapi.com/v3/venues/${venueId}/`;
+  const data = await fetchJson<EventbriteVenueResponse>(url, apiKey);
+
+  const name = cleanCsvValue(data.name ?? "");
+  const address = cleanCsvValue(
+    buildAddress(data.address?.address_1 ?? "", data.address?.address_2 ?? "")
+  );
+
+  return {
+    venueId,
+    name,
+    address,
+  };
 }
 
 async function main(): Promise<void> {
@@ -78,26 +121,44 @@ async function main(): Promise<void> {
     throw new Error("No valid Eventbrite event IDs found in eventbrite_events_url.txt");
   }
 
-  const venueIds = new Set<string>();
+  const uniqueVenueIds = new Set<string>();
 
   for (const eventId of uniqueEventIds) {
     try {
-      const venueId = await getVenueId(eventId, apiKey);
+      const venueId = await getVenueIdFromEvent(eventId, apiKey);
       if (venueId) {
-        venueIds.add(venueId);
+        uniqueVenueIds.add(venueId);
         console.log(`Event ${eventId} -> venue ${venueId}`);
       } else {
         console.warn(`Event ${eventId} returned no venue_id`);
       }
     } catch (error) {
-      console.error(error instanceof Error ? error.message : String(error));
+      console.error(
+        `Failed to fetch event ${eventId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
-  const content = [...venueIds].join(",");
-  await fs.writeFile(outputPath, content, "utf8");
+  const rows: string[] = [];
 
-  console.log(`Done. Wrote ${venueIds.size} unique venue ID(s) to ${OUTPUT_FILE}`);
+  for (const venueId of uniqueVenueIds) {
+    try {
+      const venue = await getVenueDetails(venueId, apiKey);
+      rows.push(`${venue.venueId},${venue.name},${venue.address}`);
+      console.log(`Venue ${venueId} -> ${venue.name} -> ${venue.address}`);
+    } catch (error) {
+      console.error(
+        `Failed to fetch venue ${venueId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  await fs.writeFile(outputPath, rows.join("\n"), "utf8");
+  console.log(`Done. Wrote ${rows.length} venue row(s) to ${OUTPUT_FILE}`);
 }
 
 main().catch((error) => {
