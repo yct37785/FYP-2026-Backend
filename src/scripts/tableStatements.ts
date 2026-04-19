@@ -156,6 +156,7 @@ export const tableStatements: string[] = [
     event_id INT NOT NULL,
     rating INT NOT NULL,
     comment TEXT NOT NULL,
+    is_suspended BOOLEAN NOT NULL DEFAULT FALSE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

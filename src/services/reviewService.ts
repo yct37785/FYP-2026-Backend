@@ -25,6 +25,7 @@ interface ReviewRow extends RowDataPacket {
   event_title: string;
   rating: number;
   comment: string;
+  is_suspended: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -37,6 +38,7 @@ const mapReviewRow = (row: ReviewRow): ReviewItem => ({
   eventTitle: row.event_title,
   rating: row.rating,
   comment: row.comment,
+  isSuspended: Boolean(row.is_suspended),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -129,6 +131,7 @@ export class ReviewService {
         e.title AS event_title,
         r.rating,
         r.comment,
+        r.is_suspended,
         r.created_at,
         r.updated_at
       FROM review r
@@ -156,12 +159,14 @@ export class ReviewService {
         e.title AS event_title,
         r.rating,
         r.comment,
+        r.is_suspended,
         r.created_at,
         r.updated_at
       FROM review r
       INNER JOIN users u ON u.id = r.user_id
       INNER JOIN event e ON e.id = r.event_id
       WHERE r.event_id = ?
+        AND r.is_suspended = FALSE
       ORDER BY r.created_at DESC, r.id DESC
       `,
       [eventId]
@@ -183,6 +188,7 @@ export class ReviewService {
         e.title AS event_title,
         r.rating,
         r.comment,
+        r.is_suspended,
         r.created_at,
         r.updated_at
       FROM review r
@@ -210,6 +216,7 @@ export class ReviewService {
         e.title AS event_title,
         r.rating,
         r.comment,
+        r.is_suspended,
         r.created_at,
         r.updated_at
       FROM review r
@@ -246,6 +253,7 @@ export class ReviewService {
         e.title AS event_title,
         r.rating,
         r.comment,
+        r.is_suspended,
         r.created_at,
         r.updated_at
       FROM review r
@@ -280,6 +288,7 @@ export class ReviewService {
         e.title AS event_title,
         r.rating,
         r.comment,
+        r.is_suspended,
         r.created_at,
         r.updated_at
       FROM review r
