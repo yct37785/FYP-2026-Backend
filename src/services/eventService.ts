@@ -57,6 +57,7 @@ interface EventRow extends RowDataPacket {
   ends_at: Date;
   price: number;
   pax: number;
+  total_bookings: number;
   source: EventSource;
   source_name: string | null;
   external_event_id: string | null;
@@ -82,6 +83,7 @@ const mapEventRow = (row: EventRow): EventItem => ({
   endsAt: row.ends_at,
   price: Number(row.price),
   pax: row.pax,
+  totalBookings: Number(row.total_bookings),
   source: row.source,
   sourceName: row.source_name,
   externalEventId: row.external_event_id,
@@ -90,6 +92,41 @@ const mapEventRow = (row: EventRow): EventItem => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
+
+const EVENT_SELECT = `
+  SELECT
+    e.id,
+    e.owner_id,
+    u.name AS owner_name,
+    e.title,
+    e.description,
+    e.banner_url,
+    e.category_id,
+    c.name AS category_name,
+    e.venue,
+    e.address,
+    e.city,
+    e.starts_at,
+    e.ends_at,
+    e.price,
+    e.pax,
+    COALESCE(bcount.total_bookings, 0) AS total_bookings,
+    e.source,
+    e.source_name,
+    e.external_event_id,
+    e.external_url,
+    e.is_suspended,
+    e.created_at,
+    e.updated_at
+  FROM event e
+  INNER JOIN category c ON c.id = e.category_id
+  INNER JOIN users u ON u.id = e.owner_id
+  LEFT JOIN (
+    SELECT event_id, COUNT(*) AS total_bookings
+    FROM booking
+    GROUP BY event_id
+  ) bcount ON bcount.event_id = e.id
+`;
 
 export class EventService {
   static async createEvent(data: CreateEventInput): Promise<EventItem> {
@@ -145,32 +182,7 @@ export class EventService {
 
     const [rows] = await pool.execute<EventRow[]>(
       `
-      SELECT
-        e.id,
-        e.owner_id,
-        u.name AS owner_name,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.pax,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.external_url,
-        e.is_suspended,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      INNER JOIN users u ON u.id = e.owner_id
+      ${EVENT_SELECT}
       WHERE e.id = ?
       LIMIT 1
       `,
@@ -260,32 +272,7 @@ export class EventService {
 
     const [rows] = await pool.execute<EventRow[]>(
       `
-      SELECT
-        e.id,
-        e.owner_id,
-        u.name AS owner_name,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.pax,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.external_url,
-        e.is_suspended,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      INNER JOIN users u ON u.id = e.owner_id
+      ${EVENT_SELECT}
       ${whereClause}
       ORDER BY e.starts_at ASC, e.id ASC
       `,
@@ -318,32 +305,7 @@ export class EventService {
 
     const [rows] = await pool.execute<EventRow[]>(
       `
-      SELECT
-        e.id,
-        e.owner_id,
-        u.name AS owner_name,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.pax,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.external_url,
-        e.is_suspended,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      INNER JOIN users u ON u.id = e.owner_id
+      ${EVENT_SELECT}
       WHERE ${conditions.join(' AND ')}
       LIMIT 1
       `,
@@ -362,32 +324,7 @@ export class EventService {
 
     const [eventRows] = await pool.execute<EventRow[]>(
       `
-      SELECT
-        e.id,
-        e.owner_id,
-        u.name AS owner_name,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.pax,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.external_url,
-        e.is_suspended,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      INNER JOIN users u ON u.id = e.owner_id
+      ${EVENT_SELECT}
       WHERE e.id = ?
       LIMIT 1
       `,
@@ -471,32 +408,7 @@ export class EventService {
 
     const [updatedRows] = await pool.execute<EventRow[]>(
       `
-      SELECT
-        e.id,
-        e.owner_id,
-        u.name AS owner_name,
-        e.title,
-        e.description,
-        e.banner_url,
-        e.category_id,
-        c.name AS category_name,
-        e.venue,
-        e.address,
-        e.city,
-        e.starts_at,
-        e.ends_at,
-        e.price,
-        e.pax,
-        e.source,
-        e.source_name,
-        e.external_event_id,
-        e.external_url,
-        e.is_suspended,
-        e.created_at,
-        e.updated_at
-      FROM event e
-      INNER JOIN category c ON c.id = e.category_id
-      INNER JOIN users u ON u.id = e.owner_id
+      ${EVENT_SELECT}
       WHERE e.id = ?
       LIMIT 1
       `,

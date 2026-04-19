@@ -16,6 +16,7 @@ export interface EventItem {
   endsAt: Date;
   price: number;
   pax: number;
+  totalBookings: number;
   source: EventSource;
   sourceName: string | null;
   externalEventId: string | null;

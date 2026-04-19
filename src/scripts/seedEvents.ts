@@ -90,7 +90,7 @@ export const generateSeedEvents = (
   const firstEndsAt = addHours(firstStartsAt, 2);
   events.push({
     ownerId,
-    title: 'One Pax Test Event',
+    title: '[TEST] 1 Pax Event',
     description: 'Seeded event with pax=1 for waitlist testing.',
     bannerUrl: 'https://example.com/banner-1.jpg',
     categoryId: 1,
@@ -110,7 +110,7 @@ export const generateSeedEvents = (
   const pastEndsAt = addHours(pastStartsAt, 2);
   events.push({
     ownerId,
-    title: 'Past Event',
+    title: '[TEST] Past Event',
     description: 'Seeded past event for review testing.',
     bannerUrl: 'https://example.com/banner-1.jpg',
     categoryId: 1,
