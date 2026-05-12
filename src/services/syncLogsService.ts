@@ -10,7 +10,6 @@ interface SyncRow extends RowDataPacket {
   last_success_at: Date | null;
   last_error: string | null;
   total_new_events: number;
-  is_running: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -23,7 +22,6 @@ const mapSyncRow = (row: SyncRow): SyncItem => ({
   lastSuccessAt: row.last_success_at,
   lastError: row.last_error,
   totalNewEvents: row.total_new_events,
-  isRunning: Boolean(row.is_running),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -42,7 +40,6 @@ export class SyncLogsService {
         last_success_at,
         last_error,
         total_new_events,
-        is_running,
         created_at,
         updated_at
       FROM sync

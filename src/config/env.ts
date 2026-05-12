@@ -12,4 +12,10 @@ export const env = {
   dbName: process.env.DB_NAME || 'eventsfinder',
   jwtSecret: (process.env.JWT_SECRET || 'supersecretkey123') as Secret,
   jwtExpiresIn: (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn'],
+  frontendAppUrl: process.env.FRONTEND_APP_URL || 'http://localhost:3000',
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  googleRedirectUri:
+    process.env.GOOGLE_REDIRECT_URI ||
+    `http://localhost:${Number(process.env.PORT || 3001)}/api/calendar/google/callback`,
 };

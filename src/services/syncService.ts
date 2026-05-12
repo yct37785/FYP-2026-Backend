@@ -12,7 +12,6 @@ interface SyncRow extends RowDataPacket {
   last_success_at: Date | null;
   last_error: string | null;
   total_new_events: number;
-  is_running: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -72,7 +71,6 @@ const mapSyncRow = (row: SyncRow): SyncItem => ({
   lastSuccessAt: row.last_success_at,
   lastError: row.last_error,
   totalNewEvents: row.total_new_events,
-  isRunning: Boolean(row.is_running),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -82,6 +80,8 @@ function sleep(ms: number): Promise<void> {
 }
 
 export class SyncService {
+  private static eventbriteSyncRunning = false;
+
   private static getSyncIntervalMs(): number {
     const value = Number(process.env.EVENTBRITE_SYNC_INTERVAL_MS || 60 * 60 * 1000);
 
@@ -115,7 +115,6 @@ export class SyncService {
         last_success_at,
         last_error,
         total_new_events,
-        is_running,
         created_at,
         updated_at
       FROM sync
@@ -137,10 +136,9 @@ export class SyncService {
         last_run_at,
         last_success_at,
         last_error,
-        total_new_events,
-        is_running
+        total_new_events
       )
-      VALUES (?, NULL, NULL, NULL, NULL, 0, FALSE)
+      VALUES (?, NULL, NULL, NULL, NULL, 0)
       `,
       [SOURCE]
     );
@@ -155,7 +153,6 @@ export class SyncService {
         last_success_at,
         last_error,
         total_new_events,
-        is_running,
         created_at,
         updated_at
       FROM sync
@@ -175,7 +172,6 @@ export class SyncService {
       `
       UPDATE sync
       SET
-        is_running = TRUE,
         last_run_at = NOW(),
         last_error = NULL
       WHERE source = ?
@@ -197,8 +193,7 @@ export class SyncService {
         last_created_at = COALESCE(?, last_created_at),
         last_success_at = NOW(),
         last_error = NULL,
-        total_new_events = ?,
-        is_running = FALSE
+        total_new_events = ?
       WHERE source = ?
       `,
       [lastCreatedAt, totalNewEvents, SOURCE]
@@ -212,8 +207,7 @@ export class SyncService {
       `
       UPDATE sync
       SET
-        last_error = ?,
-        is_running = FALSE
+        last_error = ?
       WHERE source = ?
       `,
       [errorMessage, SOURCE]
@@ -577,13 +571,12 @@ export class SyncService {
   }
 
   static async syncEventbrite(): Promise<void> {
-    const syncRow = await SyncService.getOrCreateSyncRow();
-
-    if (syncRow.isRunning) {
+    if (SyncService.eventbriteSyncRunning) {
       console.log('[sync:eventbrite] skipped because sync is already running');
       return;
     }
 
+    const syncRow = await SyncService.getOrCreateSyncRow();
     const intervalMs = SyncService.getSyncIntervalMs();
     const now = Date.now();
 
@@ -597,6 +590,7 @@ export class SyncService {
       return;
     }
 
+    SyncService.eventbriteSyncRunning = true;
     await SyncService.markRunStart();
 
     try {
@@ -657,6 +651,8 @@ export class SyncService {
 
       console.error(`[sync:eventbrite] failed: ${message}`);
       throw error;
+    } finally {
+      SyncService.eventbriteSyncRunning = false;
     }
   }
 }

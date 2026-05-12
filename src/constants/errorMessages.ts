@@ -61,6 +61,20 @@ export const ERR_MSGS = {
     INVALID_INPUT: 'Invalid input',
     NOTIFICATION_NOT_FOUND: 'Notification not found',
   },
+  CALENDAR: {
+    GOOGLE_NOT_CONFIGURED: 'Google Calendar is not configured',
+    CONNECTION_NOT_FOUND: 'Google Calendar connection not found',
+    BOOKING_NOT_FOUND: 'Booking not found',
+    SYNC_FAILED: 'Google Calendar sync failed',
+  },
+  GROUP: {
+    INVALID_INPUT: 'Invalid input',
+    GROUP_NOT_FOUND: 'Group not found',
+    ALREADY_MEMBER: 'You are already a member of this group',
+    MEMBERSHIP_NOT_FOUND: 'Group membership not found',
+    OWNER_CANNOT_LEAVE: 'Group owner cannot leave their own group',
+    GROUP_NOT_OWNER: 'You are not allowed to manage this group',
+  },
   GENERAL: {
     INTERNAL_SERVER_ERROR: 'Internal server error',
     ROUTE_NOT_FOUND_PREFIX: 'Route not found:',

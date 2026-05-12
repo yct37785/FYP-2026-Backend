@@ -11,6 +11,8 @@ import reportRoutes from '@routes/reportRoutes';
 import notificationRoutes from '@routes/notificationRoutes';
 import adminRoutes from '@routes/adminRoutes';
 import uploadRoutes from '@routes/uploadRoutes';
+import calendarRoutes from '@routes/calendarRoutes';
+import groupRoutes from '@routes/groupRoutes';
 import { errorHandler } from '@middlewares/errorHandler';
 import { notFound } from '@middlewares/notFound';
 import { startEventbriteSyncJob } from '@jobs/eventbriteSyncJob';
@@ -44,6 +46,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/groups', groupRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

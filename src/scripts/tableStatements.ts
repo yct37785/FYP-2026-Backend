@@ -225,9 +225,90 @@ export const tableStatements: string[] = [
     last_success_at DATETIME NULL,
     last_error TEXT NULL,
     total_new_events INT NOT NULL DEFAULT 0,
-    is_running BOOLEAN NOT NULL DEFAULT FALSE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+  `,
+
+    `
+  CREATE TABLE google_calendar_connection (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    access_token TEXT NULL,
+    refresh_token TEXT NULL,
+    scope TEXT NULL,
+    token_type VARCHAR(50) NULL,
+    expiry_date BIGINT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_google_calendar_connection_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE
+  )
+  `,
+
+  `
+  CREATE TABLE booking_calendar_sync (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    event_id INT NOT NULL,
+    google_event_id VARCHAR(191) NULL,
+    status ENUM('SYNCED', 'FAILED', 'DELETED') NOT NULL DEFAULT 'FAILED',
+    last_error TEXT NULL,
+    synced_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_booking_calendar_sync_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_booking_calendar_sync_event
+      FOREIGN KEY (event_id) REFERENCES event(id)
+      ON DELETE CASCADE
+  )
+  `,
+
+    `
+  CREATE TABLE \`groups\` (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    owner_id INT NOT NULL,
+    category_id INT NULL,
+    name VARCHAR(120) NOT NULL,
+    description TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_groups_owner
+      FOREIGN KEY (owner_id) REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_groups_category
+      FOREIGN KEY (category_id) REFERENCES category(id)
+      ON DELETE SET NULL,
+
+    INDEX idx_groups_category_created_at (category_id, created_at)
+  )
+  `,
+
+  `
+  CREATE TABLE group_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_group_members_group
+      FOREIGN KEY (group_id) REFERENCES \`groups\`(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_group_members_user
+      FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT uq_group_member UNIQUE (group_id, user_id)
   )
   `,
 ];
