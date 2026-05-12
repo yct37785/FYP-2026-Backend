@@ -45,7 +45,7 @@ export class AuthService {
     const [userResult] = await pool.execute<ResultSetHeader>(
       `
       INSERT INTO users (name, email, password_hash, role, credits)
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?)
       `,
       [name, email, passwordHash, role, 100.0]
     );
