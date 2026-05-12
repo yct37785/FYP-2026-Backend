@@ -6,7 +6,6 @@ export interface SyncItem {
   lastSuccessAt: Date | null;
   lastError: string | null;
   totalNewEvents: number;
-  isRunning: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -225,7 +225,6 @@ export const tableStatements: string[] = [
     last_success_at DATETIME NULL,
     last_error TEXT NULL,
     total_new_events INT NOT NULL DEFAULT 0,
-    is_running BOOLEAN NOT NULL DEFAULT FALSE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )
